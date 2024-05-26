@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+body {
+  width: 100vw;
+  min-height: 100vh;
+  overflow-x: hidden;
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+.bgr-auth {
+  background-image: url('/image/background-auth.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.config-shadow{
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+}
+
+.config-blur{
+  backdrop-filter: blur(10px);
+}
+
+.config-input input:focus + label,
+.config-input input:not([value=""]) + label{
+  font-size: 12px;
+  top: 0px;
+}
+
+.ant-tabs-nav-wrap{
+  display: flex;
+  justify-content: center;
+}
+
+/* .ant-tabs-nav {
+  display: flex;
+  justify-content: center;
+} */

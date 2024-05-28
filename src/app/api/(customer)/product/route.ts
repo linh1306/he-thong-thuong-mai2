@@ -9,9 +9,9 @@ interface SearchOptions {
 }
 
 export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url)
   try {
     dbConnect()
-    const { searchParams } = new URL(req.url)
     const pageSize = parseInt(searchParams.get('pageSize') ?? '10', 10)
     const currentPage = parseInt(searchParams.get('currentPage') ?? '1', 10)
     const skip = (currentPage - 1) * pageSize;

@@ -15,7 +15,7 @@ const columns: TableProps<IItemCart>['columns'] = [
     key: 'name',
     render: (_, product) => (
       <Flex gap='small' align="center">
-        <Avatar size='large' shape="square" icon={<Image src={product.urlImage} alt={product.name} width={100} height={100} />} />
+        <Avatar size='large' shape="square" icon={<Image src={product.urlImage ?? ''} alt={product.name ?? ''} width={100} height={100} />} />
         <p>{product.name}</p>
       </Flex>
     ),
@@ -37,7 +37,7 @@ const columns: TableProps<IItemCart>['columns'] = [
     key: 'address',
     dataIndex: 'quantityOfCart',
     render: (_, product) => (
-      <p>{product.quantityOfCart * product.price}</p>
+      <p>{product.quantityOfCart * product.price!}</p>
     ),
   }
 ]
@@ -47,7 +47,6 @@ export default function PageCard() {
     {
       name: 'Rau củ',
       price: 12000,
-      unitsInStock: 3,
       description: 'mô tả',
       quantity: 123214,
       urlImage: '/image/product/product-1.jpg',
@@ -60,7 +59,6 @@ export default function PageCard() {
     {
       name: 'Rau củ',
       price: 12000,
-      unitsInStock: 3,
       description: 'mô tả',
       quantity: 123214,
       urlImage: '/image/product/product-1.jpg',
@@ -73,7 +71,6 @@ export default function PageCard() {
     {
       name: 'Rau củ',
       price: 12000,
-      unitsInStock: 3,
       description: 'mô tả',
       quantity: 123214,
       urlImage: '/image/product/product-1.jpg',
@@ -83,10 +80,10 @@ export default function PageCard() {
       unit: 'cái',
       quantityOfCart: 3
     },
-    
+
   ]
   const totalPrice = cartProducts.reduce((accumulator, product) => {
-    return accumulator + (product.price * product.quantityOfCart);
+    return accumulator + (product.price! * product.quantityOfCart);
   }, 0);
   const countProducts = cartProducts.reduce((accumulator, product) => {
     return accumulator + product.quantityOfCart;

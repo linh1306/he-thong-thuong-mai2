@@ -1,3 +1,3 @@
-import PageInfoProduct from "@/module/infoProduct";
+import PageInfoProduct from "@/module/customer/infoProduct";
 
 export default PageInfoProduct

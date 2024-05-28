@@ -30,12 +30,11 @@ export async function GET(req: Request) {
       options.name = { $regex: searchParams.get('searchKey')!, $options: 'i' }
     }
 
-    try {
+    
       const res = await Product.find(removeEmptyFields(options))
         .skip(skip)
         .limit(pageSize)
         .populate('_category')
-
       const totalDocuments = await Product.countDocuments(removeEmptyFields(options))
       return Response.json({
         status: 'success',
@@ -47,15 +46,6 @@ export async function GET(req: Request) {
           totalDocuments
         }
       });
-    } catch (error) {
-      return Response.json({
-        message: 'get', error: error, data: [], options: {
-          pageSize,
-          currentPage,
-          totalDocuments: 0
-        }
-      })
-    }
   } catch (error) {
     return Response.json({ message: 'get', error: error })
   }

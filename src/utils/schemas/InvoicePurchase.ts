@@ -6,7 +6,7 @@ const {
   create_at
 } = propertiesSchema
 
-export interface IInvoicePurchase {
+export interface IInvoicePurchase {       //hóa đơn nhập hàng
   _id?: ObjectId;
   _products?: ObjectId[],
   _supplier?: ObjectId,

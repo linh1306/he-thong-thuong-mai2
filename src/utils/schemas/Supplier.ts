@@ -7,7 +7,7 @@ const {
   address,
 } = propertiesSchema
 
-export interface ISupplier {
+export interface ISupplier {      //Nhà cung cấp
   _id?: ObjectId;
   name?: string;
   phone?: string;

@@ -8,7 +8,7 @@ const {
   exp_at
 } = propertiesSchema
 
-export interface IProductWarehouse {
+export interface IProductWarehouse {        //Mặt hàng trong kho
   _id?: ObjectId;
   _product?: ObjectId,
   quantity?: number,                //mặt hàng còn trong kho

@@ -6,7 +6,7 @@ const {
   price
 } = propertiesSchema
 
-export interface IProductInvoice {
+export interface IProductInvoice {  //Mặt hàng trong hóa đơn
   _id?: ObjectId;
   _product?: ObjectId,
   quantity?: number,

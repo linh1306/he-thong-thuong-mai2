@@ -7,10 +7,12 @@ import {
   ShoppingCartOutlined
 } from '@ant-design/icons';
 import { Header } from "antd/es/layout/layout"
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Avatar, Badge, Button, Divider, Dropdown, Flex, Space, theme } from 'antd';
 import Image from 'next/image';
 import Link from 'next/link';
+import Search from 'antd/es/input/Search';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 interface IHeaderProp {
   collapsed: boolean;
@@ -60,6 +62,11 @@ function CpnUser({ user }: { user: IUser }) {
 }
 
 export default function CHeader({ collapsed, setCollapsed }: IHeaderProp) {
+  const router = useRouter();
+  const path = usePathname()
+  const searchParams = useSearchParams()
+  const paramsObj = Object.fromEntries(searchParams.entries())
+  const [searchKey, setSearchKey] = useState('')
 
   const {
     token: { colorBgContainer },
@@ -75,6 +82,19 @@ export default function CHeader({ collapsed, setCollapsed }: IHeaderProp) {
     role: 'áduaddhaodd',
   }
 
+  useEffect(() => {
+    setSearchKey('')
+  }, [router,searchParams])
+
+
+  const handleSearch = () => {
+    if (path === '/mat-hang') {
+      const newSearchParam = new URLSearchParams({ ...paramsObj, searchKey }).toString()
+      router.push(`/mat-hang?${newSearchParam}`)
+    } else {
+      router.push(`/mat-hang?searchKey=${searchKey}`)
+    }
+  }
   return (
     <Header className='w-full z-50 border-b-2 px-3' style={{ background: colorBgContainer }}>
       <Flex className='w-full' justify='space-between' align='center' >
@@ -88,10 +108,13 @@ export default function CHeader({ collapsed, setCollapsed }: IHeaderProp) {
             height: 64,
           }}
         />
+        <Flex className='w-[600px]'>
+          <Search value={searchKey} placeholder='Tìm kiếm tên sản phẩm' onChange={(e) => { setSearchKey(e.target.value) }} onSearch={handleSearch} />
+        </Flex>
         <Flex gap='large' align='center'>
           <Link href={'/gio-hang'}>
             <Badge size='small' count={1}>
-              <Avatar size='small' icon={<ShoppingCartOutlined/>} />
+              <Avatar size='small' icon={<ShoppingCartOutlined />} />
             </Badge>
           </Link>
           <CpnUser user={user} />

@@ -7,7 +7,7 @@ const {
   create_at,
 } = propertiesSchema
 
-export interface IFeedback {
+export interface IFeedback {      //đánh giá sản phẩm
   _id?: ObjectId;
   _user?: ObjectId;
   _product?: ObjectId;

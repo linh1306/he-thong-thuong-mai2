@@ -1,4 +1,10 @@
 
+export interface IOptionSearchPage {
+  page_size?: number,
+  current_page?: number
+  total_count?: number
+}
+
 const propertiesSchema = {
   name: { type: String },
   email: { type: String },
@@ -26,7 +32,7 @@ const propertiesSchema = {
   totalRevenue: { type: Number },
   interest: { type: Number },
   marketing: { type: Number },
-  totalDiscount:{type: Number}
+  totalDiscount: { type: Number }
 }
 
 export default propertiesSchema

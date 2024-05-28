@@ -12,7 +12,7 @@ const {
   urlImage,
 } = propertiesSchema
 
-export interface IUser {
+export interface IUser {        //người dùng
   _id?: ObjectId;
   name?: string;
   email?: string;

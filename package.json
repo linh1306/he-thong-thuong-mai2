@@ -9,9 +9,14 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@cloudinary/react": "^1.13.0",
+    "@cloudinary/url-gen": "^1.19.0",
     "antd": "^5.17.3",
+    "axios": "^1.7.2",
     "bcrypt": "^5.1.1",
+    "cloudinary": "^2.2.0",
     "cookie": "^0.6.0",
+    "crypto": "^1.0.1",
     "dotenv": "^16.4.5",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.4.0",

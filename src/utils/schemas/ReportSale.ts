@@ -8,7 +8,7 @@ const {
   create_at
 } = propertiesSchema
 
-export interface IReportSale {         //báo cáo doanh thu
+export interface IReportSale {         //báo cáo bán hàng
   _id?: ObjectId;
   _product?: ObjectId;
   quantity?: number;

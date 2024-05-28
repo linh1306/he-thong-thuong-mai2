@@ -72,6 +72,7 @@ export default function CLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const getListCategory = async () => {
       const resCategory = await getCategory();
+      console.log(resCategory)
       const categories: ICategory[] = resCategory.data
       const newRoutes = routes.map(route => {
         if (route?.key === '/mat-hang') {

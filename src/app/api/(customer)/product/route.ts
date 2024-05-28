@@ -10,7 +10,6 @@ interface SearchOptions {
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
-  try {
     dbConnect()
     const pageSize = parseInt(searchParams.get('pageSize') ?? '10', 10)
     const currentPage = parseInt(searchParams.get('currentPage') ?? '1', 10)
@@ -46,7 +45,4 @@ export async function GET(req: Request) {
           totalDocuments
         }
       });
-  } catch (error) {
-    return Response.json({ message: 'get', error: error })
-  }
 }

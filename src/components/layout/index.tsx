@@ -63,6 +63,10 @@ export default function CLayout({ children }: { children: React.ReactNode }) {
               key: '/admin/quan-ly-nguoi-dung',
               label: 'Người dùng'
             },
+            {
+              key: '/admin/quan-ly-lien-he',
+              label: 'Liên hệ'
+            },
           ]
         }
       ]

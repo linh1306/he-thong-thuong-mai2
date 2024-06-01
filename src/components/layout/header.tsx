@@ -2,7 +2,6 @@
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  UserOutlined,
   LogoutOutlined,
   ShoppingCartOutlined
 } from '@ant-design/icons';
@@ -13,23 +12,24 @@ import Image from 'next/image';
 import Link from 'next/link';
 import Search from 'antd/es/input/Search';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { IUser } from '@/utils/schemas/User';
+import { setUserStore } from '@/utils/redux/features/user/userSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '@/utils/redux/store';
+import { getMe } from '@/utils/api/customer/getMe';
+import { deleteToken } from '@/utils/api/Auth';
 
 interface IHeaderProp {
   collapsed: boolean;
   setCollapsed: any;
 }
-interface IUser {
-  name: string,
-  address: string,
-  email: string,
-  urlImage: string,
-  account: string,
-  password: string,
-  role: string,
+
+interface ICpnUserProp {
+  user: IUser | null;
+  handleLogout: () => void
 }
 
-
-function CpnUser({ user }: { user: IUser }) {
+function CpnUser({ user, handleLogout }: ICpnUserProp) {
   return (
     <Dropdown
       trigger={['click']}
@@ -39,52 +39,56 @@ function CpnUser({ user }: { user: IUser }) {
             <div className='w-full h-10 bg-pink-400'></div>
             <div className='relative w-full flex justify-center'>
               <div className='absolute w-full h-1/2 bg-pink-400'></div>
-              <Avatar className='' size={70} icon={<Image src={user.urlImage} alt='avatar' width={70} height={70} />} />
+              <Avatar className='' size={70} icon={<Image src={user?.urlImage!} alt='avatar' width={70} height={70} />} />
             </div>
           </div>
           <Flex vertical gap='small' className='p-3 text-center'>
             <Flex vertical>
 
-              <p className='text-base'>{user.name}</p>
-              <p className='text-xs text-slate-400'>{user.email}</p>
+              <p className='text-base'>{user?.name}</p>
+              <p className='text-xs text-slate-400'>{user?.email}</p>
             </Flex>
             <Flex vertical gap='small'>
               <Divider style={{ margin: 0 }} />
-              <Button icon={<LogoutOutlined />} >Đăng xuất</Button>
+              <Button icon={<LogoutOutlined />} onClick={handleLogout} >Đăng xuất</Button>
             </Flex>
           </Flex>
         </div>
       )}
     >
-      <Avatar className='cursor-pointer' size='large' icon={<Image src={user.urlImage} alt='avatar' width={70} height={70} />} />
+      <Avatar className='cursor-pointer' size='large' icon={<Image src={user?.urlImage!} alt='avatar' width={70} height={70} />} />
     </Dropdown>
   )
 }
 
 export default function CHeader({ collapsed, setCollapsed }: IHeaderProp) {
   const router = useRouter();
+  const dispatch = useDispatch()
   const path = usePathname()
+  const userStore = useSelector((state: RootState) => state.user.user)
   const searchParams = useSearchParams()
   const paramsObj = Object.fromEntries(searchParams.entries())
   const [searchKey, setSearchKey] = useState('')
+  const [user, setUser] = useState<IUser | null>(userStore)
 
   const {
     token: { colorBgContainer },
   } = theme.useToken();
 
-  const user: IUser = {
-    name: 'Nguyễn Văn Linh',
-    address: 'ninh binh',
-    email: 'nguyenlinh13602@gmail.com',
-    urlImage: '/image/imageUser/avatar-0.png',
-    account: 'ádasdhasodh',
-    password: 'idsdaksd',
-    role: 'áduaddhaodd',
-  }
+
+  useEffect(() => {
+    const fetchGetMe = async () => {
+      const res = await getMe()
+      if (res.status === 'success') {
+        setUser(res.data)
+      }
+    }
+    fetchGetMe()
+  }, [userStore])
 
   useEffect(() => {
     setSearchKey('')
-  }, [router,searchParams])
+  }, [router, searchParams])
 
 
   const handleSearch = () => {
@@ -94,6 +98,12 @@ export default function CHeader({ collapsed, setCollapsed }: IHeaderProp) {
     } else {
       router.push(`/mat-hang?searchKey=${searchKey}`)
     }
+  }
+
+  const handleLogout = async () => {
+    await deleteToken()
+    dispatch(setUserStore(null))
+    setUser(null)
   }
   return (
     <Header className='w-full z-50 border-b-2 px-3' style={{ background: colorBgContainer }}>
@@ -112,12 +122,22 @@ export default function CHeader({ collapsed, setCollapsed }: IHeaderProp) {
           <Search value={searchKey} placeholder='Tìm kiếm tên sản phẩm' onChange={(e) => { setSearchKey(e.target.value) }} onSearch={handleSearch} />
         </Flex>
         <Flex gap='large' align='center'>
-          <Link href={'/gio-hang'}>
-            <Badge size='small' count={1}>
-              <Avatar size='small' icon={<ShoppingCartOutlined />} />
-            </Badge>
-          </Link>
-          <CpnUser user={user} />
+          {user ?
+            <>
+              <Link href={'/gio-hang'}>
+                <Badge size='small' count={1}>
+                  <Avatar size='small' icon={<ShoppingCartOutlined />} />
+                </Badge>
+              </Link>
+              <CpnUser user={user} handleLogout={handleLogout} />
+            </>
+            :
+            <Link href={'/auth/dang-nhap'}>
+              <Button size='small' shape='round'>
+                Đăng nhập
+              </Button>
+            </Link>
+          }
         </Flex>
       </Flex>
     </Header>

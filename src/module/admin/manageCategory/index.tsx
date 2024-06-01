@@ -15,17 +15,18 @@ export default function ManageCategory() {
   const [openModal, setOpenModal] = useState(false);
   const [titleModal, setTitleModal] = useState('Add');
   const [initValue, setInitValue] = useState<ICategory>({});
+  const [loading, setLoading] = useState(true)
   const [reload, setReload] = useState(false)
 
   const columns: TableProps<ICategory>['columns'] = [
     {
       key: 'stt',
-      title: 'Số thứ tự',
+      title: <p>{category.length}</p>,
       render: (_, __, index) => <p>{index + 1}</p>,
     },
     {
       key: 'image',
-      title: 'Banner',
+      title: 'Hình ảnh',
       render: (_, category) => (
         <div className="w-12 aspect-square overflow-hidden object-cover">
           <Image src={category.urlImage!} alt="banner category" width={400} height={400} />
@@ -63,6 +64,17 @@ export default function ManageCategory() {
     },
   ];
 
+  useEffect(() => {
+    const fetchData = async () => {
+      const res = await getCategory();
+      if (res.status === 'success') {
+        setCategory(res.data)
+      }
+      setLoading(false)
+    };
+    fetchData();
+  }, [reload]);
+
   const handleSubmitModal = async (param: any) => {
     try {
       let res = null
@@ -86,15 +98,6 @@ export default function ManageCategory() {
       console.error('Failed to submit the form:', error);
     }
   };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const { data } = await getCategory();
-      setCategory(data);
-    };
-    fetchData();
-  }, [reload]);
-
   return (
     <Flex vertical gap={10}>
       <Flex className="w-full" justify="end">
@@ -109,7 +112,7 @@ export default function ManageCategory() {
           Add
         </Button>
       </Flex>
-      <Table columns={columns} dataSource={category} rowKey="_id" />
+      <Table loading={loading} columns={columns} pagination={false} dataSource={category} rowKey="_id" />
       <CModal
         title={titleModal}
         initValue={initValue}

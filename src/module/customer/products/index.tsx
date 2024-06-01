@@ -46,6 +46,8 @@ export default function PageProducts() {
     const fetchData = async () => {
       const res = await getProducts({ ...removeEmptyFields(paramsObj), ...optionSearch })
       setProducts(res.data ?? [])
+      console.log(res);
+
     }
     fetchData()
   }, [searchParams?.toString(), path])

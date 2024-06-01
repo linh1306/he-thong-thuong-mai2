@@ -2,7 +2,8 @@ import { fetcher } from ".";
 
 const path = {
   signIn: '/api/auth/signIn',
-  signUp: '/api/auth/signUp'
+  signUp: '/api/auth/signUp',
+  logout: '/api/auth/logout',
 }
 
 export interface ISignInParams {
@@ -26,4 +27,8 @@ const signIn = async (body: ISignInParams): Promise<any> => {
   return fetcher({ url: path.signIn, method: "post", data: body })
 }
 
-export { signUp, signIn };
+const deleteToken = async (): Promise<any> => {
+  return fetcher({ url: path.logout, method: "get" })
+}
+
+export { signUp, signIn, deleteToken };

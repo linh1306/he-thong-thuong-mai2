@@ -1,33 +1,19 @@
-import { removeEmptyFields } from "@/utils/fuc";
+import { objectParamSearch, removeEmptyFields } from "@/utils/fuc";
 import dbConnect from "@/utils/mongodb";
 import Product from "@/utils/schemas/Product";
 
-interface SearchOptions {
-  _category?: string | null;
-  price?: { $gte: number; $lte: number } | null;
-  name?: { $regex: string, $options: string } | null
-}
-
 export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url)
   try {
     dbConnect()
-    const { searchParams } = new URL(req.url)
-    const pageSize = parseInt(searchParams.get('pageSize') ?? '10', 10)
-    const currentPage = parseInt(searchParams.get('currentPage') ?? '1', 10)
+    const { currentPage, pageSize, totalDocuments, searchKey, priceMin, priceMax, ...options } = objectParamSearch(searchParams)
     const skip = (currentPage - 1) * pageSize;
 
-
-    const options: SearchOptions = {
-      _category: searchParams.get('category'),
-      price: null,
-      name: null
+    if (searchKey) {
+      options.name = { $regex: searchKey, $options: 'i' }
     }
-
-    if (searchParams.get('priceMin') && searchParams.get('priceMax')) {
-      options.price = { $gte: parseInt(searchParams.get('priceMin')!, 10), $lte: parseInt(searchParams.get('priceMax')!, 10) }
-    }
-    if (searchParams.get('searchKey')) {
-      options.name = { $regex: searchParams.get('searchKey')!, $options: 'i' }
+    if (priceMin && priceMax) {
+      options.price = { $gte: parseInt(priceMin), $lte: parseInt(priceMax) }
     }
 
     try {
@@ -49,14 +35,14 @@ export async function GET(req: Request) {
       });
     } catch (error) {
       return Response.json({
-        message: 'get', error: error, data: [], options: {
-          pageSize,
-          currentPage,
-          totalDocuments: 0
-        }
+        status: 'warning',
+        message: 'Lấy danh sách thất bại',
+        error: error,
+        data: [],
+        options: options
       })
     }
   } catch (error) {
-    return Response.json({ message: 'get', error: error })
+    return Response.json({ status: 'error', message: 'Đã có lỗi xảy ra vui lòng thử lại sau', error: error })
   }
 }

@@ -2,30 +2,45 @@
 import CModal from "@/components/modal";
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { IProduct } from "@/utils/schemas/Product";
-import { Button, Flex, Input, Space, Table, TableProps } from "antd";
+import { Button, Flex, Input, Pagination, Space, Table, TableProps } from "antd";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import createNotification from "@/utils/fuc/notification";
-import { removeEmptyFields } from "@/utils/fuc";
+import { createSearchParams, removeEmptyFields } from "@/utils/fuc";
 import { createProduct, deleteProduct, updateProduct } from "@/utils/api/admin/product";
 import { getProducts } from "@/utils/api/customer/product";
 import { ICategory } from "@/utils/schemas/Category";
 import Select, { SelectProps } from "antd/es/select";
 import { getCategory } from "@/utils/api/customer/category";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import Search from "antd/es/input/Search";
 
 export default function ManageProduct() {
+  const path = usePathname()
+  const route = useRouter()
+  const searchParams = useSearchParams()
+  const paramsObj = Object.fromEntries(searchParams.entries())
+
   const [product, setProduct] = useState<IProduct[]>([]);
   const [OptionCategory, setOptionCategory] = useState<SelectProps['options']>([]);
   const [openModal, setOpenModal] = useState(false);
   const [titleModal, setTitleModal] = useState('Add');
   const [initValue, setInitValue] = useState<IProduct>({});
   const [reload, setReload] = useState(false)
+  const [optionPage, setOptionPage] = useState({
+    currentPage: parseInt(paramsObj.currentPage ?? 1),
+    pageSize: 10,
+    category: paramsObj.category ?? '',
+    searchKey: paramsObj.searchKey ?? '',
+    totalDocuments: 0
+  })
+  const [loading, setLoading] = useState(false)
 
   const columns: TableProps<IProduct>['columns'] = [
     {
       key: 'stt',
-      title: 'Số thứ tự',
-      render: (_, __, index) => <p>{index + 1}</p>,
+      title: <p>{optionPage.totalDocuments}</p>,
+      render: (_, __, index) => <p>{index + 1 + (optionPage.currentPage - 1) * 10}</p>,
     },
     {
       key: 'image',
@@ -57,7 +72,7 @@ export default function ManageProduct() {
     {
       key: 'description',
       title: 'Mô tả',
-      dataIndex: 'description',
+      render: (_, item) => <p className="text-nowrap overflow-hidden text-ellipsis w-32">{item.description}</p>
     },
     {
       key: 'quantity',
@@ -119,8 +134,6 @@ export default function ManageProduct() {
           res = await deleteProduct({ _id: initValue?._id! })
           break;
       }
-      console.log(param, res);
-
       if (res.status === 'success') {
         setReload(prop => !prop)
       }
@@ -133,8 +146,18 @@ export default function ManageProduct() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const dataProduct = await getProducts();
-      setProduct(dataProduct.data);
+      setLoading(true)
+      const dataProduct = await getProducts(optionPage)
+      console.log(dataProduct);
+      setOptionPage(prop => ({ ...prop, ...dataProduct.options }))
+      setProduct(dataProduct.data)
+      setLoading(false)
+    };
+    fetchData();
+  }, [reload]);
+
+  useEffect(() => {
+    const fetchData = async () => {
       const fetchCateGory = await getCategory();
       const dataCateGory: ICategory[] = fetchCateGory?.data ?? []
       const optionCategory: SelectProps['options'] = dataCateGory.map(category => {
@@ -143,11 +166,39 @@ export default function ManageProduct() {
       setOptionCategory(optionCategory);
     };
     fetchData();
-  }, [reload]);
+  }, []);
+
+  const handleChangePagination = (page: number, pageSize: number) => {
+    const newRoute = createSearchParams(path, { currentPage: page })
+    setOptionPage(prop => ({ ...prop, currentPage: page }));
+    route.push(newRoute)
+    setReload(prop => !prop)
+  }
+
+  const handleSearch = () => {
+    const { pageSize, totalDocuments, ...optionFetch } = optionPage
+    const newSearchParam = createSearchParams(path, optionFetch)
+    route.push(newSearchParam)
+    setReload(prop => !prop)
+  }
 
   return (
     <Flex vertical gap={10}>
-      <Flex className="w-full" justify="end">
+      <Flex className="w-full" justify="space-between">
+        <Flex className="w-80" gap={3}>
+          <Select
+            className="flex-1"
+            defaultValue={optionPage.category}
+            allowClear
+            options={OptionCategory}
+            onChange={(value) => { setOptionPage(prop => ({ ...prop, category: value })) }} />
+          <Search
+            className="flex-1"
+            value={optionPage.searchKey}
+            placeholder='Tìm kiếm tên sản phẩm'
+            onChange={(e) => { setOptionPage(prop => ({ ...prop, searchKey: e.target.value })) }}
+            onSearch={handleSearch} />
+        </Flex>
         <Button
           type="primary"
           onClick={() => {
@@ -159,7 +210,8 @@ export default function ManageProduct() {
           Add
         </Button>
       </Flex>
-      <Table columns={columns} dataSource={product} rowKey="_id" />
+      <Table loading={loading} columns={columns} dataSource={product} rowKey="_id" pagination={false} />
+      <Pagination defaultCurrent={optionPage.currentPage} total={optionPage.totalDocuments} onChange={handleChangePagination} />
       <CModal
         title={titleModal}
         initValue={initValue}

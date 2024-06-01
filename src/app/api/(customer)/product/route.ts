@@ -15,7 +15,7 @@ export async function GET(req: Request) {
     if (priceMin && priceMax) {
       options.price = { $gte: parseInt(priceMin), $lte: parseInt(priceMax) }
     }
-
+    try {
       const res = await Product.find(removeEmptyFields(options))
         .skip(skip)
         .limit(pageSize)

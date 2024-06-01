@@ -16,12 +16,10 @@ export async function GET(req: Request) {
       options.price = { $gte: parseInt(priceMin), $lte: parseInt(priceMax) }
     }
 
-    try {
       const res = await Product.find(removeEmptyFields(options))
         .skip(skip)
         .limit(pageSize)
         .populate('_category')
-
       const totalDocuments = await Product.countDocuments(removeEmptyFields(options))
       return Response.json({
         status: 'success',
@@ -46,3 +44,4 @@ export async function GET(req: Request) {
     return Response.json({ status: 'error', message: 'Đã có lỗi xảy ra vui lòng thử lại sau', error: error })
   }
 }
+

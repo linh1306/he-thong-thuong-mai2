@@ -2,28 +2,42 @@
 import CModal from "@/components/modal";
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { IUser } from "@/utils/schemas/User";
-import { Button, Flex, Input, Space, Table, TableProps } from "antd";
+import { Button, Flex, Input, Pagination, Space, Table, TableProps } from "antd";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import createNotification from "@/utils/fuc/notification";
-import { removeEmptyFields } from "@/utils/fuc";
+import { createSearchParams, removeEmptyFields } from "@/utils/fuc";
 import { ICategory } from "@/utils/schemas/Category";
 import Select, { SelectProps } from "antd/es/select";
 import { getCategory } from "@/utils/api/customer/category";
 import { getUsers, updateRoleUser } from "@/utils/api/admin/user";
+import Search from "antd/es/input/Search";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 export default function ManageUser() {
-  const [user, setUser] = useState<IUser[]>([]);
-  const [OptionCategory, setOptionCategory] = useState<SelectProps['options']>([]);
-  const [openModal, setOpenModal] = useState(false);
-  const [titleModal, setTitleModal] = useState('Add');
-  const [initValue, setInitValue] = useState<IUser>({});
+  const path = usePathname()
+  const route = useRouter()
+  const searchParams = useSearchParams()
+  const paramsObj = Object.fromEntries(searchParams.entries())
+
+  const [user, setUser] = useState<IUser[]>([])
+  const [openModal, setOpenModal] = useState(false)
+  const [titleModal, setTitleModal] = useState('Add')
+  const [initValue, setInitValue] = useState<IUser>({})
+  const [loading, setLoading] = useState(false)
   const [reload, setReload] = useState(false)
+  const [optionPage, setOptionPage] = useState({
+    currentPage: parseInt(paramsObj.currentPage ?? 1),
+    pageSize: 10,
+    role: paramsObj.role ?? '',
+    searchKey: paramsObj.searchKey ?? '',
+    totalDocuments: 0
+  })
 
   const columns: TableProps<IUser>['columns'] = [
     {
       key: 'stt',
-      title: 'Số thứ tự',
+      title: <p>{optionPage.totalDocuments}</p>,
       render: (_, __, index) => <p>{index + 1}</p>,
     },
     {
@@ -80,6 +94,34 @@ export default function ManageUser() {
     },
   ];
 
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      const res = await getUsers(optionPage);
+      console.log(res);
+      if (res.status === 'success') {
+        setOptionPage(prop => ({ ...prop, ...res.options }))
+        setUser(res.data)
+      }
+      setLoading(false)
+    };
+    fetchData();
+  }, [reload]);
+
+  const handleSearch = () => {
+    const { pageSize, totalDocuments, ...optionFetch } = optionPage
+    const newSearchParam = createSearchParams(path, optionFetch)
+    route.push(newSearchParam)
+    setReload(prop => !prop)
+  }
+
+  const handleChangePagination = (page: number, pageSize: number) => {
+    const newRoute = createSearchParams(path, { currentPage: page })
+    setOptionPage(prop => ({ ...prop, currentPage: page }));
+    route.push(newRoute)
+    setReload(prop => !prop)
+  }
+
   const handleSubmitModal = async (param: any) => {
     try {
       let res = null
@@ -99,24 +141,30 @@ export default function ManageUser() {
       console.error('Failed to submit the form:', error);
     }
   };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const dataUser = await getUsers();
-      setUser(dataUser.data);
-      const fetchCateGory = await getCategory();
-      const dataCateGory: ICategory[] = fetchCateGory?.data ?? []
-      const optionCategory: SelectProps['options'] = dataCateGory.map(category => {
-        return { label: category.name, value: (category?._id ?? '').toString() };
-      });
-      setOptionCategory(optionCategory);
-    };
-    fetchData();
-  }, [reload]);
-
   return (
     <Flex vertical gap={10}>
-      <Table columns={columns} dataSource={user} rowKey="_id" />
+      <Flex className="w-full" justify="space-between">
+        <Flex className="w-80" gap={3}>
+          <Select
+            className="flex-1"
+            defaultValue={optionPage.role}
+            allowClear
+            options={[{ label: 'Quản lý', value: 'admin' }, { label: 'Nhân viên', value: 'employee' }, { label: 'Người dùng', value: 'customer' }]}
+            onChange={(value) => { setOptionPage(prop => ({ ...prop, role: value })) }} />
+          <Search
+            className="flex-1"
+            value={optionPage.searchKey}
+            placeholder='Tìm kiếm theo tên'
+            onChange={(e) => { setOptionPage(prop => ({ ...prop, searchKey: e.target.value })) }}
+            onSearch={handleSearch} />
+        </Flex>
+      </Flex>
+      <Table
+        loading={loading}
+        pagination={false}
+        columns={columns}
+        dataSource={user} rowKey="_id" />
+      <Pagination defaultCurrent={optionPage.currentPage} total={optionPage.totalDocuments} onChange={handleChangePagination} />
       <CModal
         title={titleModal}
         initValue={initValue}

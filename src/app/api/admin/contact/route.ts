@@ -1,9 +1,13 @@
 import { objectParamSearch, removeEmptyFields } from "@/utils/fuc";
 import getRoleWithToken from "@/utils/fuc/auth";
-import { verifyToken } from "@/utils/fuc/tokenJwt";
 import dbConnect from "@/utils/mongodb";
-import User from "@/utils/schemas/User";
+import Contact from "@/utils/schemas/Contact";
 import yupValidate from "@/utils/yubConfig/yupValidate";
+
+interface SearchOptions {
+  status?: boolean | null;
+  email?: { $regex: string, $options: string } | null
+}
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
@@ -11,23 +15,26 @@ export async function GET(req: Request) {
     dbConnect()
     const { roleUser } = await getRoleWithToken()
     if (roleUser !== 'admin') {
-      return Response.json({ status: 'warning', message: 'Bạn không có quyền lấy danh sách người dùng' })
+      return Response.json({ status: 'warning', message: 'Bạn không có quyền xem danh sách liên hệ' });
     }
 
-    const { currentPage, pageSize, totalDocuments, searchKey, ...options } = objectParamSearch(searchParams)
+    const { currentPage, pageSize, totalDocuments, searchKey, status, ...options } = objectParamSearch(searchParams)
     if (searchKey) {
-      options.name = { $regex: searchKey, $options: 'i' }
+      options.email = { $regex: searchKey, $options: 'i' }
+    }
+    if (status) {
+      options.status = status === 'true'
     }
 
     try {
-      const res = await User.find(removeEmptyFields(options))
+      const res = await Contact.find(removeEmptyFields(options))
         .skip((currentPage - 1) * pageSize)
         .limit(pageSize)
 
-      const totalDocuments = await User.countDocuments(removeEmptyFields(options))
+      const totalDocuments = await Contact.countDocuments(removeEmptyFields(options))
       return Response.json({
         status: 'success',
-        message: 'Lấy danh sách Mặt hàng',
+        message: 'Lấy danh sách liên hệ',
         data: res,
         options: { pageSize, currentPage, totalDocuments },
         optionsSearch: options
@@ -46,34 +53,27 @@ export async function GET(req: Request) {
   }
 }
 
+
 export async function PUT(req: Request) {
   try {
     dbConnect()
-    const { _id, role } = await req.json();
-    const yup = await yupValidate({ role })
-
+    const { _id, status } = await req.json();
+    const yup = await yupValidate({ status })
     if (!yup.valid) {
       return Response.json({ status: 'warning', message: 'Các trường dữ liệu không đúng yêu cầu', error: yup.invalidFields });
     }
 
-    const { payloadToken } = verifyToken()
-
-    if (payloadToken?.role !== 'admin') {
-      return Response.json({ status: 'warning', message: 'Bạn không thể thay đổi quyền của người dùng vì bạn không phải admin', data: payloadToken });
+    const { roleUser } = await getRoleWithToken()
+    if (roleUser !== 'admin') {
+      return Response.json({ status: 'warning', message: 'Bạn không có quyền update' });
     }
 
-    const res = await User.updateOne(
+    const res = await Contact.updateOne(
       { _id: _id },
-      {
-        $set: {
-          role
-        }
-      }
-
+      { $set: { status } }
     )
-    return Response.json({ status: 'success', message: 'Thay đổi quyền thành công', data: res });
+    return Response.json({ status: 'success', message: 'Thay đổi trạng thái thành công', data: res });
   } catch (error) {
     return Response.json({ message: 'get', error: error })
   }
 }
-

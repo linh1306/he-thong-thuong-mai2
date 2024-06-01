@@ -9,7 +9,7 @@ export function Home() {
     <Flex vertical gap={'middle'}>
       <Slide />
       <Banner />
-      {/* <TabProduct /> */}
+      <TabProduct />
       <Service />
     </Flex>
   );

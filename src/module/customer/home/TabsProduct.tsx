@@ -1,59 +1,73 @@
+'use client'
 import { Tabs } from "antd";
 import { AndroidOutlined, AppleOutlined } from '@ant-design/icons';
 import Products from "@/components/products";
 import { IProduct } from "@/utils/schemas/Product";
+import { useEffect, useState } from "react";
+import { getProducts } from "@/utils/api/customer/product";
+
+interface IProductTab {
+  [key: string]: IProduct[];
+  all: IProduct[];
+  fresh_food: IProduct[];
+  fruit: IProduct[];
+}
 
 export default function TabProduct() {
-  const products: IProduct[] = [
-    {
-      name: 'Rau củ',
-      price: 12000,
-      description: 'mô tả',
-      quantity: 123214,
-      urlImage: '/image/product/product-1.jpg',
-      percentSale: 10,
-      numberOfReviews: 123,
-      sumRating: 425,
-      unit: 'cái',
-    }
-  ]
+  const [productsTab, setProductsTab] = useState<IProductTab>({
+    all: [],
+    fresh_food: [],
+    fruit: []
+  })
+  const [activeKey, setActiveKey] = useState<string>('all')
   const tabItems = [
     {
-      key: '1',
+      key: 'all',
       label: 'Tất cả',
-      children: <Products products={products} />,
+      children: <Products products={productsTab.all} max={8} />,
       icon: <AppleOutlined />
     },
     {
-      key: '2',
-      label: 'Bánh ngọt',
-      children: <Products products={products} />,
-      icon: <AppleOutlined />
-    },
-    {
-      key: '3',
+      key: 'fresh_food',
       label: 'Đồ tươi sống',
-      children: <Products products={products} />,
+      children: <Products products={productsTab.fresh_food} max={8} />,
       icon: <AppleOutlined />
     },
     {
-      key: '4',
-      label: 'Thức uống',
-      children: <Products products={products} />,
+      key: 'fruit',
+      label: 'Trái cây',
+      children: <Products products={productsTab.fruit} max={8} />,
       icon: <AppleOutlined />
-    },
-    {
-      key: '5',
-      label: 'Rau củ',
-      children: <Products products={products} />,
-      icon: <AppleOutlined />
-    },
-
+    }
   ]
+
+  const optionTab: { [key: string]: object; all: object; fresh_food: object; fruit: object } = {
+    all: {},
+    fresh_food: { category: '665452f10db33ec64d737b41' },
+    fruit: { category: '665453ec0db33ec64d737b45' },
+  }
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (productsTab[activeKey].length == 0) {
+        console.log('reload');
+        const res = await getProducts(optionTab[activeKey])
+        if (res.status === 'success') {
+          setProductsTab({
+            ...productsTab,
+            [activeKey]: res.data
+          })
+        }
+      }
+    }
+    fetchData()
+  }, [activeKey])
+
   return (
     <Tabs
-      defaultActiveKey="1"
+      defaultActiveKey={activeKey}
       items={tabItems}
+      onChange={(activeKey: string) => setActiveKey(activeKey)}
     />
   );
 }

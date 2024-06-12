@@ -1,5 +1,7 @@
-import mongoose, { Schema, ObjectId } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 import propertiesSchema from './index'
+import { IDiscount } from './Discount';
+import { IUser } from './User';
 
 const {
   code,
@@ -7,27 +9,24 @@ const {
   statusInvoice,
   total,
   totalDiscount,
+  revenue,
   create_at
 } = propertiesSchema
 
 export interface IInvoiceSale {       //hóa đơn bán hàng
-  _id?: ObjectId;
-  _products?: ObjectId[],             //danh sách mặt hàng bán
-  _user?: ObjectId,
-  _discount?: ObjectId,
+  _id?: string;
+  _user?: IUser | string,
+  _discount?: IDiscount | string,
   code?: string,                      //mã thanh toán
   address?: string[],                 //địa chỉ giao hàng
-  statusInvoice?: 'payed' | 'delivered'      //trạng thái đã thanh toán hoặc đã giao hàng
+  statusInvoice?: 'confirmed' | 'payed' | 'success' | 'cancelled'      //trạng thái
+  revenue?: number,                   //lãi của hóa đơn
   total?: number,                     //tổng tiền
   totalDiscount?: number,             //tổng tiền giảm giá
   create_at?: Date                    //ngày tạo
 }
 
-const InvoiceSaleSchema: Schema = new Schema({
-  _products: {
-    type: [Schema.ObjectId],
-    ref: 'ProductInvoice'
-  },
+export const InvoiceSaleSchema: Schema = new Schema({
   _discount: {
     type: Schema.ObjectId,
     ref: 'Discount'
@@ -39,6 +38,7 @@ const InvoiceSaleSchema: Schema = new Schema({
   code,
   address,
   statusInvoice,
+  revenue,
   total,
   totalDiscount,
   create_at

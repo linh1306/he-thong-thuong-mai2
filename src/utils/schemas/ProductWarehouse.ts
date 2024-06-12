@@ -1,20 +1,23 @@
 import mongoose, { Schema, ObjectId } from 'mongoose';
 import propertiesSchema from './index'
+import { IProduct } from './Product';
 
 const {
   quantity,
-  price,
+  importPrice,
+  isCancel,
   create_at,
   exp_at
 } = propertiesSchema
 
 export interface IProductWarehouse {        //Mặt hàng trong kho
-  _id?: ObjectId;
-  _product?: ObjectId,
+  _id?: string;
+  _product?: IProduct | string,
   quantity?: number,                //mặt hàng còn trong kho
-  price?: number,                   //giá nhập
+  importPrice?: number,             //giá nhập
   create_at?: Date,                 //ngày nhập
-  exp_at?: Date
+  isCancel?: boolean,
+  exp_at?: Date                     //ngày hết hạn
 }
 
 const ProductWarehouseSchema: Schema = new Schema({
@@ -23,7 +26,8 @@ const ProductWarehouseSchema: Schema = new Schema({
     ref: 'Product'
   },
   quantity,
-  price,
+  importPrice,
+  isCancel,
   create_at,
   exp_at
 });
@@ -31,4 +35,3 @@ const ProductWarehouseSchema: Schema = new Schema({
 const ProductWarehouse = mongoose.models.ProductWarehouse || mongoose.model<IProductWarehouse>('ProductWarehouse', ProductWarehouseSchema);
 
 export default ProductWarehouse;
-

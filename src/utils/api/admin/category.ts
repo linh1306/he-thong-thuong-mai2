@@ -1,4 +1,3 @@
-import { ObjectId } from "mongoose";
 import { fetcher } from "..";
 
 const path = {
@@ -10,12 +9,12 @@ export interface ICreateCategoryParams {
   urlImage: string
 }
 export interface IUpdateCategoryParams {
-  _id: ObjectId,
+  _id: string,
   name: string,
   urlImage: string
 }
 export interface IDeleteCategoryParams {
-  _id: ObjectId
+  _id: string
 }
 
 const createCategory = async (body: ICreateCategoryParams): Promise<any> => {

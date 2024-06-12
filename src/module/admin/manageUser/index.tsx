@@ -38,7 +38,7 @@ export default function ManageUser() {
     {
       key: 'stt',
       title: <p>{optionPage.totalDocuments}</p>,
-      render: (_, __, index) => <p>{index + 1}</p>,
+      render: (_, __, index) => <p>{index + 1 + (optionPage.currentPage - 1) * 10}</p>,
     },
     {
       key: 'image',
@@ -112,6 +112,7 @@ export default function ManageUser() {
     const { pageSize, totalDocuments, ...optionFetch } = optionPage
     const newSearchParam = createSearchParams(path, optionFetch)
     route.push(newSearchParam)
+    setOptionPage(prop => ({ ...prop, currentPage: 1 }));
     setReload(prop => !prop)
   }
 

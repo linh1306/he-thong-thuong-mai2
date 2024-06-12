@@ -15,9 +15,9 @@ const {
 } = propertiesSchema
 
 export interface IProduct {     //Mặt hàng
-  _id?: ObjectId,
+  _id?: string,
   name?: string,                 //Tên mặt hàng
-  _category?: ObjectId | ICategory,         //Loại mặt hàng
+  _category?: string | ICategory,         //Loại mặt hàng
   price?: number,                //giá
   description?: string,          //mô tả
   quantity?: number,             //số lượng còn lại trong kho

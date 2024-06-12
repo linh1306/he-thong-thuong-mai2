@@ -6,6 +6,7 @@ export interface IOptionSearchPage {
 }
 
 const propertiesSchema = {
+  typeInvoice: { type: String, enum: ['purchase', 'sale'], },
   name: { type: String },
   email: { type: String },
   password: { type: String },
@@ -32,7 +33,10 @@ const propertiesSchema = {
   totalRevenue: { type: Number },
   interest: { type: Number },
   marketing: { type: Number },
-  totalDiscount: { type: Number }
+  totalDiscount: { type: Number },
+  revenue: { type: Number },
+  importPrice: { type: Number },
+  isCancel: { type: Boolean }
 }
 
 export default propertiesSchema

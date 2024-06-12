@@ -1,11 +1,15 @@
 import { fetcher } from "..";
 
 const path = {
-  contact: '/api/product'
+  product: '/api/product',
+  getInfoProduct: '/api/product/info',
 }
 
 const getProducts = async (params?: object): Promise<any> => {
-  return fetcher({ url: path.contact, method: "get", params: params ?? {} })
+  return fetcher({ url: path.product, method: "get", params: params ?? {} })
+}
+const getInfoProduct = async (params?: object): Promise<any> => {
+  return fetcher({ url: path.getInfoProduct, method: "get", params: params ?? {} })
 }
 
-export { getProducts };
+export { getProducts, getInfoProduct };

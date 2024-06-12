@@ -3,6 +3,7 @@ import User, { IUser } from "@/utils/schemas/User"
 import bcrypt from 'bcrypt';
 import yupValidate from "@/utils/yubConfig/yupValidate"
 import { hashPassword } from "@/utils/fuc/hashPassword";
+import { newDate } from "@/utils/fuc";
 
 export async function POST(req: Request) {
   await dbConnect()
@@ -28,7 +29,7 @@ export async function POST(req: Request) {
       password:hashedPassword,
       address,
       phone,
-      create_at: new Date(),
+      create_at: newDate(),
       role: 'customer',
       urlImage: '/image/user.png',
     }

@@ -3,54 +3,54 @@
 import Products from "@/components/products"
 import { getCategory } from "@/utils/api/customer/category"
 import { getProducts } from "@/utils/api/customer/product"
-import { removeEmptyFields } from "@/utils/fuc"
+import { createSearchParams, removeEmptyFields } from "@/utils/fuc"
 import { IOptionSearchPage } from "@/utils/schemas"
 import { ICategory } from "@/utils/schemas/Category"
 import { IProduct } from "@/utils/schemas/Product"
-import { Button, Col, Row, Select, SelectProps, Slider, TreeSelect, Typography } from "antd"
+import { Button, Col, Empty, Pagination, Row, Select, SelectProps, Slider, Spin, TreeSelect, Typography } from "antd"
 import Link from "next/link"
-import { usePathname, useSearchParams } from "next/navigation"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
-
-interface ISearchParams {
-  category?: string;
-  priceMin?: string;
-  priceMax?: string;
-  sortBy?: string;
-  searchKey?: string
-}
-
-const optionSearch: IOptionSearchPage = {
-  page_size: 10,
-  current_page: 1,
-}
 
 export default function PageProducts() {
   const path = usePathname()
+  const route = useRouter()
   const searchParams = useSearchParams()
   const paramsObj = Object.fromEntries(searchParams.entries())
+
+  const initOption = {
+    currentPage: parseInt(paramsObj.currentPage ?? 1),
+    pageSize: 12,
+    category: paramsObj.category ?? '',
+    searchKey: paramsObj.searchKey ?? '',
+    totalDocuments: 0,
+    priceMin: parseInt(paramsObj.priceMin ?? '0'),
+    priceMax: parseInt(paramsObj.priceMax ?? '3000'),
+    sortBy: paramsObj.sortBy ?? '',
+  }
+
   const [category, setCategory] = useState<SelectProps['options']>([])
   const [products, setProducts] = useState<IProduct[]>([])
-  const [findOption, setFindOption] = useState<ISearchParams>(removeEmptyFields(paramsObj))
+  const [reload, setReload] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [optionPage, setOptionPage] = useState(initOption)
 
-  const createPath = () => {
-    const keyValuePairs = path + '?'
-    const options = []
-    for (const key in findOption) {
-      options.push(key + '=' + findOption[key as keyof ISearchParams])
-    }
-    return keyValuePairs + options.join('&');
-  }
+  useEffect(() => {
+    setOptionPage(initOption)
+    setReload(prop => !prop)
+  }, [searchParams.toString()])
 
   useEffect(() => {
     const fetchData = async () => {
-      const res = await getProducts({ ...removeEmptyFields(paramsObj), ...optionSearch })
-      setProducts(res.data ?? [])
+      setLoading(true)
+      const res = await getProducts(optionPage)
       console.log(res);
-
+      setOptionPage(prop => ({ ...prop, ...res.options }))
+      setProducts(res.data)
+      setLoading(false)
     }
     fetchData()
-  }, [searchParams?.toString(), path])
+  }, [reload])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -61,6 +61,22 @@ export default function PageProducts() {
     }
     fetchData()
   }, [])
+
+  const handleFind = () => {
+    const { pageSize, totalDocuments, searchKey, ...optionFetch } = optionPage
+    const newSearchParam = createSearchParams(path, { ...optionFetch, currentPage: 1 })
+    route.push(newSearchParam)
+    setOptionPage(prop => ({ ...prop, currentPage: 1 }));
+    setReload(prop => !prop)
+  }
+
+  const handleChangePagination = (page: number, pageSize: number) => {
+    const { totalDocuments, searchKey, ...optionFetch } = optionPage
+    const newRoute = createSearchParams(path, { ...optionFetch, currentPage: page })
+    route.push(newRoute)
+    setOptionPage(prop => ({ ...prop, currentPage: page }));
+    setReload(prop => !prop)
+  }
 
   return (
     <Row gutter={8} className="flex flex-nowrap">
@@ -73,8 +89,9 @@ export default function PageProducts() {
               <Select
                 style={{ width: '100%' }}
                 placeholder="Chọn loại mặt hàng"
+                allowClear
                 defaultValue={searchParams.get('category')}
-                onChange={(value) => { setFindOption(prop => ({ ...prop, category: value })) }}
+                onChange={(value) => { setOptionPage(prop => ({ ...prop, category: value })) }}
                 options={category}
               />
             </div>
@@ -84,62 +101,67 @@ export default function PageProducts() {
                 range
                 defaultValue={[parseInt(searchParams.get('priceMin') ?? '0', 10), parseInt(searchParams.get('priceMax') ?? '3000', 10)]}
                 max={3000} step={100}
-                onChange={(value) => { setFindOption(prop => ({ ...prop, priceMin: value[0].toString(), priceMax: value[1].toString() })) }}
+                onChange={(value) => { setOptionPage(prop => ({ ...prop, priceMin: value[0], priceMax: value[1] })) }}
               />
             </div>
             <div>
               <Typography.Text >Sắp xếp theo</Typography.Text>
               <TreeSelect
-                treeDataSimpleMode
                 style={{ width: '100%' }}
                 defaultValue={searchParams.get('sortBy') ?? ''}
                 dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
                 placeholder="Please select"
-                onChange={(value) => { setFindOption(prop => ({ ...prop, sortBy: value })) }}
+                onChange={(value) => { setOptionPage(prop => ({ ...prop, sortBy: value })) }}
+                treeDefaultExpandAll
                 treeData={[
                   {
-                    id: 1,
-                    pId: 0,
-                    value: 'new',
                     title: 'Mới nhất',
+                    value: 'new',
                   },
                   {
-                    id: 2,
-                    pId: 0,
-                    value: 'sale',
                     title: 'Bán chạy',
+                    value: 'sale',
                   },
                   {
-                    id: 3,
-                    pId: 0,
-                    value: 'price',
                     title: 'Giá bán',
+                    value: 'price',
                     disabled: true,
-                  },
-                  {
-                    id: 4,
-                    pId: 3,
-                    value: 'priceIncrease',
-                    title: 'Tăng dần',
-                  },
-                  {
-                    id: 5,
-                    pId: 3,
-                    value: 'priceReduce',
-                    title: 'Giảm dần',
+                    children: [
+                      {
+                        title: 'Tăng dần',
+                        value: 'priceIncrease'
+                      },
+                      {
+                        title: 'Giảm dần',
+                        value: 'priceReduce'
+                      }
+                    ]
                   },
 
                 ]}
               />
             </div>
-            <Link href={createPath()}>
-              <Button type="primary">Lọc</Button>
-            </Link>
+            <Button className="cursor-pointer" type="primary" onClick={handleFind}>Lọc</Button>
           </div>
         </div>
       </Col>
       <Col flex='auto' className="">
-        <Products products={products} />
+        {
+          loading ?
+            <div className="w-full flex justify-center items-center">
+              <Spin />
+            </div>
+            :
+            <>
+              {
+                products.length > 0 ?
+                  <Products products={products} />
+                  :
+                  <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
+              }
+              <Pagination className="mt-4" defaultCurrent={optionPage.currentPage} total={optionPage.totalDocuments} onChange={handleChangePagination} />
+            </>
+        }
       </Col>
     </Row>
   )

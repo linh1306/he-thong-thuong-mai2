@@ -13,7 +13,7 @@ const {
 } = propertiesSchema
 
 export interface IUser {        //người dùng
-  _id?: ObjectId;
+  _id?: string;
   name?: string;
   email?: string;
   password?: string;

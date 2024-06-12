@@ -1,5 +1,7 @@
 import mongoose, { Schema, ObjectId } from 'mongoose';
 import propertiesSchema from './index'
+import { IUser } from './User';
+import { IProduct } from './Product';
 
 const {
   description,
@@ -8,10 +10,10 @@ const {
 } = propertiesSchema
 
 export interface IFeedback {      //đánh giá sản phẩm
-  _id?: ObjectId;
-  _user?: ObjectId;
-  _product?: ObjectId;
-  _feedback?: ObjectId;
+  _id?: string;
+  _user?: IUser | string;
+  _product?: IProduct | string;
+  _feedback?: IFeedback | string;
   description?: string;
   rate?: number;
   create_at?: Date;

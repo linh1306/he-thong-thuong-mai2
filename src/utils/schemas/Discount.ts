@@ -1,15 +1,17 @@
-import mongoose, { Schema, ObjectId } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 import propertiesSchema from './index'
 
 const {
   name,
+  code,
   value,
   exp_at,
   quantity,
 } = propertiesSchema
 
 export interface IDiscount {          //mã giảm giá
-  _id?: ObjectId;
+  _id?: string;
+  code?:string;
   name?: string;
   value?: number;
   exp_at?: Date;
@@ -18,6 +20,7 @@ export interface IDiscount {          //mã giảm giá
 
 const DiscountSchema: Schema = new Schema({
   name,
+  code,
   value,
   exp_at,
   quantity

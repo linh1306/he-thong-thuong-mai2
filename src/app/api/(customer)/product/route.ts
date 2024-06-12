@@ -6,14 +6,17 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
   try {
     dbConnect()
-    const { currentPage, pageSize, totalDocuments, searchKey, priceMin, priceMax, ...options } = objectParamSearch(searchParams)
+    const { currentPage, pageSize, totalDocuments, searchKey, sortBy, category, priceMin, priceMax, ...options } = objectParamSearch(searchParams)
     const skip = (currentPage - 1) * pageSize;
 
     if (searchKey) {
       options.name = { $regex: searchKey, $options: 'i' }
     }
     if (priceMin && priceMax) {
-      options.price = { $gte: parseInt(priceMin), $lte: parseInt(priceMax) }
+      options.price = { $gte: parseInt(priceMin) * 1000, $lte: parseInt(priceMax) * 1000 }
+    }
+    if (category) {
+      options._category = category
     }
     try {
       const res = await Product.find(removeEmptyFields(options))
@@ -29,7 +32,8 @@ export async function GET(req: Request) {
           pageSize,
           currentPage,
           totalDocuments
-        }
+        },
+        optionSearch: options
       });
     } catch (error) {
       return Response.json({

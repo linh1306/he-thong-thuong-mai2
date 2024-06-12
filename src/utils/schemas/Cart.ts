@@ -1,4 +1,4 @@
-import mongoose, { Schema, ObjectId } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 import { IProduct } from './Product';
 
 export interface IItemCart {      //giỏ hàng
@@ -7,7 +7,7 @@ export interface IItemCart {      //giỏ hàng
 }
 
 export interface ICart {      //giỏ hàng
-  _id?: ObjectId;
+  _id?: string;
   _products: IItemCart[];
 }
 

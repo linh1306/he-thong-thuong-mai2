@@ -1,4 +1,3 @@
-import { ObjectId } from "mongoose";
 import { fetcher } from "..";
 
 const path = {
@@ -14,12 +13,12 @@ export interface ICreateProductParams {
   unit: string
 }
 export interface IUpdateProductParams {
-  _id: ObjectId,
+  _id: string,
   name: string,
   urlImage: string
 }
 export interface IDeleteProductParams {
-  _id: ObjectId
+  _id: string
 }
 
 const createProduct = async (body: ICreateProductParams): Promise<any> => {

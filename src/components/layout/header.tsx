@@ -3,7 +3,8 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   LogoutOutlined,
-  ShoppingCartOutlined
+  ShoppingCartOutlined,
+  BellOutlined
 } from '@ant-design/icons';
 import { Header } from "antd/es/layout/layout"
 import React, { useEffect, useState } from 'react';
@@ -29,6 +30,28 @@ interface ICpnUserProp {
   handleLogout: () => void
 }
 
+function CpnNotification() {
+  return (
+    <Link href={'/gio-hang'}>
+      <Badge size='small' count={1}>
+        <Avatar size='small' icon={<BellOutlined />} />
+      </Badge>
+    </Link>
+  )
+}
+
+function CpnCart() {
+  const cartStore = useSelector((state: RootState) => state.cart)
+  const size = cartStore.length
+  return (
+    <Link href={'/gio-hang'}>
+      <Badge size='small' count={size ? size : ''}>
+        <Avatar size='small' icon={<ShoppingCartOutlined />} />
+      </Badge>
+    </Link>
+  )
+}
+
 function CpnUser({ user, handleLogout }: ICpnUserProp) {
   return (
     <Dropdown
@@ -44,7 +67,6 @@ function CpnUser({ user, handleLogout }: ICpnUserProp) {
           </div>
           <Flex vertical gap='small' className='p-3 text-center'>
             <Flex vertical>
-
               <p className='text-base'>{user?.name}</p>
               <p className='text-xs text-slate-400'>{user?.email}</p>
             </Flex>
@@ -64,46 +86,38 @@ function CpnUser({ user, handleLogout }: ICpnUserProp) {
 export default function CHeader({ collapsed, setCollapsed }: IHeaderProp) {
   const router = useRouter();
   const dispatch = useDispatch()
-  const path = usePathname()
-  const userStore = useSelector((state: RootState) => state.user.user)
+  const userStore = useSelector((state: RootState) => state.user)
   const searchParams = useSearchParams()
-  const paramsObj = Object.fromEntries(searchParams.entries())
   const [searchKey, setSearchKey] = useState('')
-  const [user, setUser] = useState<IUser | null>(userStore)
+  const [user, setUser] = useState<IUser>(userStore)
 
   const {
     token: { colorBgContainer },
   } = theme.useToken();
 
-
   useEffect(() => {
     const fetchGetMe = async () => {
       const res = await getMe()
       if (res.status === 'success') {
+        dispatch(setUserStore(res.data))
         setUser(res.data)
       }
     }
     fetchGetMe()
-  }, [userStore])
+  }, [JSON.stringify(userStore) === JSON.stringify(user)])
 
   useEffect(() => {
     setSearchKey('')
   }, [router, searchParams])
 
-
   const handleSearch = () => {
-    if (path === '/mat-hang') {
-      const newSearchParam = new URLSearchParams({ ...paramsObj, searchKey }).toString()
-      router.push(`/mat-hang?${newSearchParam}`)
-    } else {
-      router.push(`/mat-hang?searchKey=${searchKey}`)
-    }
+    router.push(`/mat-hang?searchKey=${searchKey}`)
   }
 
   const handleLogout = async () => {
     await deleteToken()
-    dispatch(setUserStore(null))
-    setUser(null)
+    dispatch(setUserStore({}))
+    setUser({})
   }
   return (
     <Header className='w-full z-50 border-b-2 px-3' style={{ background: colorBgContainer }}>
@@ -119,16 +133,13 @@ export default function CHeader({ collapsed, setCollapsed }: IHeaderProp) {
           }}
         />
         <Flex className='w-[600px]'>
-          <Search value={searchKey} placeholder='Tìm kiếm tên sản phẩm' onChange={(e) => { setSearchKey(e.target.value) }} onSearch={handleSearch} />
+          <Search value={searchKey} allowClear placeholder='Tìm kiếm tên sản phẩm' onChange={(e) => { setSearchKey(e.target.value) }} onSearch={handleSearch} />
         </Flex>
-        <Flex gap='large' align='center'>
-          {user ?
+        <Flex gap='small' align='center'>
+          <CpnCart />
+          {Object.keys(user).length > 0 ?
             <>
-              <Link href={'/gio-hang'}>
-                <Badge size='small' count={1}>
-                  <Avatar size='small' icon={<ShoppingCartOutlined />} />
-                </Badge>
-              </Link>
+              <CpnNotification />
               <CpnUser user={user} handleLogout={handleLogout} />
             </>
             :

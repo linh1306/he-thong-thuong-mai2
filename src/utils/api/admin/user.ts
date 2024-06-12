@@ -1,4 +1,3 @@
-import { ObjectId } from "mongoose";
 import { fetcher } from "..";
 
 const path = {
@@ -13,7 +12,7 @@ export interface IGetUserParams {
 }
 
 export interface IUpdateRoleUserParams {
-  _id: ObjectId,
+  _id: string,
   role: 'customer' | 'admin' | 'employee'
 }
 

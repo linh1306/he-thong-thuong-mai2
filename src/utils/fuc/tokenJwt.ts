@@ -18,6 +18,5 @@ export function verifyToken(): JwtPayload {
   } catch (err) {
     return { statusToken: false, payloadToken: {}, message: 'token không hợp lệ' }
   }
-
 }
 

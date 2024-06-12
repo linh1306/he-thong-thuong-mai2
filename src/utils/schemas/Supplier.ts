@@ -8,7 +8,7 @@ const {
 } = propertiesSchema
 
 export interface ISupplier {      //Nhà cung cấp
-  _id?: ObjectId;
+  _id?: string;
   name?: string;
   phone?: string;
   address?: string[];

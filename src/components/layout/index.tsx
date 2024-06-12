@@ -48,6 +48,10 @@ export default function CLayout({ children }: { children: React.ReactNode }) {
       label: 'Admin',
       children: [
         {
+          key: '/admin/dashboard',
+          label: 'Dashboard'
+        },
+        {
           key: '/quan-ly',
           label: 'Quản lý',
           children: [
@@ -67,8 +71,31 @@ export default function CLayout({ children }: { children: React.ReactNode }) {
               key: '/admin/quan-ly-lien-he',
               label: 'Liên hệ'
             },
+            {
+              key: '/admin/quan-ly-nha-cung-cap',
+              label: 'Nhà cung cấp'
+            },
           ]
         }
+      ]
+    },
+    {
+      key: '/employee',
+      icon: <ContactsOutlined />,
+      label: 'Nhân viên',
+      children: [
+        {
+          key: '/employee/nhap-hang',
+          label: 'Nhập hàng'
+        },
+        {
+          key: '/employee/xuat-hang',
+          label: 'Xuất hàng'
+        },
+        {
+          key: '/employee/mat-hang-trong-kho',
+          label: 'Mặt hàng trong kho'
+        },
       ]
     },
   ])

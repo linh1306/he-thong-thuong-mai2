@@ -1,4 +1,4 @@
-import mongoose, { Schema, ObjectId } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 import propertiesSchema from './index'
 
 const {
@@ -7,7 +7,7 @@ const {
 } = propertiesSchema
 
 export interface ICategory {      //loại mặt hàng
-  _id?: ObjectId;
+  _id?: string;
   name?: string;
   urlImage?: string
 }

@@ -11,7 +11,7 @@ const {
 } = propertiesSchema
 
 export interface IContact {     //liên hệ
-  _id?: ObjectId;
+  _id?: string;
   name?: string;
   email?: string;
   phone?: number;

@@ -179,6 +179,7 @@ export default function ManageProduct() {
     const { pageSize, totalDocuments, ...optionFetch } = optionPage
     const newSearchParam = createSearchParams(path, optionFetch)
     route.push(newSearchParam)
+    setOptionPage(prop => ({ ...prop, currentPage: 1 }))
     setReload(prop => !prop)
   }
 

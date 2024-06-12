@@ -6,7 +6,7 @@ const path = {
 }
 
 export interface IUpdateContactParams {
-  _id: ObjectId,
+  _id: string,
   status: boolean,
 }
 

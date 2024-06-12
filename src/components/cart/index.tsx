@@ -16,7 +16,7 @@ export default function CCart({ product }: ICartProps) {
   };
 
   return (
-    <Link href={''}>
+    <Link href={`/mat-hang/chi-tiet/${product._id}`}>
       <div className='w-full text-black h-full p-2 border-[1px] rounded-md hover:shadow-lg'>
         <div onClick={preventDefault} className='cursor-default aspect-square w-full object-cover border-[1px] rounded-md overflow-hidden'>
           <Image className='w-full h-full' src={product.urlImage!} alt={product.name!} width={400} height={400} />
@@ -31,7 +31,7 @@ export default function CCart({ product }: ICartProps) {
             </div>
           </div>
           <div className='cursor-default' onClick={preventDefault}>
-            <AddToCart value={0} product={product} />
+            <AddToCart product={product} />
           </div>
         </div>
       </div>

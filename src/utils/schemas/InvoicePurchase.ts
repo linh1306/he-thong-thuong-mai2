@@ -1,5 +1,6 @@
-import mongoose, { Schema, ObjectId } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 import propertiesSchema from './index'
+import { ISupplier } from './Supplier';
 
 const {
   total,
@@ -7,18 +8,13 @@ const {
 } = propertiesSchema
 
 export interface IInvoicePurchase {       //hóa đơn nhập hàng
-  _id?: ObjectId;
-  _products?: ObjectId[],
-  _supplier?: ObjectId,
+  _id?: string;
+  _supplier?: ISupplier | string,
   total?: number,
   create_at?: Date
 }
 
-const InvoicePurchaseSchema: Schema = new Schema({
-  _products: {
-    type: [Schema.ObjectId],
-    ref: 'ProductInvoice'
-  },
+export const InvoicePurchaseSchema: Schema = new Schema({
   _supplier: {
     type: Schema.ObjectId,
     ref: 'Supplier'

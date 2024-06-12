@@ -1,5 +1,5 @@
 'use client';
-import { Form, Modal, UploadFile } from 'antd';
+import { Cascader, Form, Modal, UploadFile } from 'antd';
 import React, { ReactNode, useEffect, useState } from 'react';
 import UploadImage from '../uploadImage';
 
@@ -11,34 +11,34 @@ interface IItemForm {
   type: string[]
 }
 
-interface IPropsModal {
+interface IPropsModal<T> {
   title: string;
   itemsForm: IItemForm[];
   openModal: boolean;
   setOpenModal: (value: boolean) => void;
   handleSubmit: (param: any) => void;
-  initValue?: { urlImage?: string };
+  initValue: object;
 }
 
-export default function CModal({
+export default function CModal<T = object>({
   title,
   itemsForm,
   openModal,
   setOpenModal,
   handleSubmit,
   initValue = {},
-}: IPropsModal) {
+}: IPropsModal<T>) {
   const [form] = Form.useForm();
   const [formData, setFormData] = useState(initValue);
   const [fileList, setFileList] = useState<UploadFile[]>([]);
 
   useEffect(() => {
-    if (initValue?.urlImage) {
+    if ('urlImage' in initValue) {
       setFileList([{
         uid: '-1',
         name: 'image.png',
         status: 'done',
-        url: initValue.urlImage,
+        url: initValue.urlImage as string ?? '',
       }])
     } else {
       setFileList([])
@@ -52,9 +52,12 @@ export default function CModal({
   };
 
   const handleOk = () => {
-    handleSubmit({ ...formData, urlImage: fileList[0]?.response?.url })
-    setOpenModal(false);
-  };
+    let valueSubmit = formData
+    if (fileList.length > 0) {
+      valueSubmit = { ...valueSubmit, urlImage: fileList[0]?.response?.url }
+      }
+    handleSubmit(valueSubmit)
+  }
 
   const handleCancel = () => {
     form.resetFields();
@@ -76,9 +79,7 @@ export default function CModal({
           onValuesChange={handleChange}
         >
           {itemsForm.map((item, index) => {
-            if (title in item.type) {
-              return <></>
-            } else if (item.name === 'urlImage') {
+            if (item.name === 'urlImage') {
               return (<UploadImage key={index} fileList={fileList} setFileList={setFileList} />)
             } else {
               return (

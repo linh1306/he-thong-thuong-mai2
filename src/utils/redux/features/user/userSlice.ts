@@ -1,21 +1,16 @@
 'use  client'
 import { IUser } from "@/utils/schemas/User";
-import { createSlice } from "@reduxjs/toolkit";
+import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 
-export interface IUserState {
-  user: IUser | null;
-}
 
-const initialState: IUserState = {
-  user: null
-}
+const initialState: IUser = {}
 
 export const userSlice = createSlice({
   name: 'user',
   initialState,
   reducers: {
     setUserStore: (state, action) => {
-      state.user = action.payload
+      return action.payload
     }
   }
 })

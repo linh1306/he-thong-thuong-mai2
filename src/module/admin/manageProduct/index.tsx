@@ -236,7 +236,7 @@ export default function ManageProduct() {
           },
           {
             name: 'price',
-            label: 'Tên',
+            label: 'Giá bán',
             required: true,
             type: ['Add', 'Edit'],
             children: <Input type="number" />

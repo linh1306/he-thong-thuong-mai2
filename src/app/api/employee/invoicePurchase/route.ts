@@ -101,6 +101,29 @@ export async function POST(req: Request) {
 
     await ProductInvoice.insertMany(newProductInvoice)
     await ProductWarehouse.insertMany(newProductWarehouse)
+
+    await ProductWarehouse.aggregate([
+      {
+        $match: {
+          isCancel: false,
+        }
+      },
+      {
+        $group: {
+          _id: "$_product",
+          quantity: { $sum: "$quantity" }
+        }
+      },
+      {
+        $merge: {
+          into: "products",
+          on: "_id",
+          whenMatched: "merge",
+          whenNotMatched: "discard"
+        }
+      }
+    ]).exec()
+
     return Response.json({ status: 'success', message: 'Tạo đơn nhập hàng thành công', data: res });
   } catch (error) {
     return Response.json({ message: 'get', error: error })

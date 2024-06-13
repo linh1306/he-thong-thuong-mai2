@@ -13,9 +13,9 @@ export interface IProductInvoice {  //Mặt hàng trong hóa đơn
   _id?: string,
   _invoiceSale?: IInvoiceSale | string | null,
   _invoicePurchase?: IInvoicePurchase | string | null,
-  _product: IProduct | string,
-  quantity: number,
-  price: number,
+  _product?: IProduct | string,
+  quantity?: number,
+  price?: number,
 }
 
 const ProductInvoiceSchema: Schema = new Schema({

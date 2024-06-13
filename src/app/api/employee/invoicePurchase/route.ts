@@ -30,12 +30,12 @@ export async function GET(req: Request) {
       options._supplier = _supplier
     }
     try {
-      const res = await InvoicePurchase.find(removeEmptyFields(options))
+      const res = await InvoicePurchase.find(options)
         .skip((currentPage - 1) * pageSize)
         .limit(pageSize)
         .populate('_supplier')
 
-      const totalDocuments = await InvoicePurchase.countDocuments(removeEmptyFields(options))
+      const totalDocuments = await InvoicePurchase.countDocuments(options)
       return Response.json({
         status: 'success',
         message: 'Lấy danh sách đơn hàng nhập',
@@ -68,7 +68,7 @@ export async function POST(req: Request) {
     }
 
     const total = _products.reduce((sum, product) => {
-      return sum + product.price * product.quantity;
+      return sum + (product?.price ?? 0) * (product?.quantity ?? 0);
     }, 0);
 
     const create_at = newDate()

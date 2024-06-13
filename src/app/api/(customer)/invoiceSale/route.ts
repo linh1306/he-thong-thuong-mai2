@@ -28,9 +28,58 @@ export async function GET(req: Request) {
     }
 
     try {
-      const res = await InvoiceSale.find(options)
-        .skip((currentPage - 1) * pageSize)
-        .limit(pageSize)
+      const res = await InvoiceSale.aggregate([
+        {
+          $match: options
+        },
+        {
+          $lookup: {
+            from: 'productinvoices',
+            let: { invoiceSaleId: '$_id' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: { $eq: ['$_invoiceSale', '$$invoiceSaleId'] }
+                }
+              },
+              {
+                $lookup: {
+                  from: 'products',
+                  localField: '_product',
+                  foreignField: '_id',
+                  as: 'productDetails'
+                }
+              },
+              {
+                $project: {
+                  _id: 1,
+                  quantity: 1,
+                  price: 1,
+                  'productDetails.name': 1,
+                  'productDetails.urlImage': 1,
+                }
+              },
+              {
+                $unwind: {
+                  path: '$productDetails',
+                  preserveNullAndEmptyArrays: true
+                }
+              },
+              {
+                $project: {
+                  _id: 1,
+                  quantity: 1,
+                  price: 1,
+                  'productDetails.name': 1,
+                  'productDetails.urlImage': 1,
+                }
+              }
+            ],
+            as: 'products'
+          }
+        }
+      ]).skip((currentPage - 1) * pageSize)
+        .limit(pageSize);
 
       const totalDocuments = await InvoiceSale.countDocuments(options)
       return Response.json({
@@ -71,14 +120,6 @@ export async function POST(req: Request) {
     const discount = await Discount.findOne({ code: codeDiscount })
     let code = createId();
 
-    const totalDiscount = discount?.value ?? 0                                         //số tiền giảm giá của thẻ giảm giá
-    let totalSale = 0
-    const total = _products.reduce((sum, { _product, quantity }) => {
-      const price = (_product?.price ?? 0) * (100 - (_product?.percentSale ?? 0)) / 100      //giá bán
-      totalSale += quantity * Math.min((_product?.price ?? 0) - price, 0)                           //số tiền giảm giá theo %
-      return sum + quantity * price;
-    }, 0) - totalDiscount
-
     let capital = 0
     const PInvoice: IProductInvoice[] = []
 
@@ -113,6 +154,15 @@ export async function POST(req: Request) {
         })
       }
     }
+
+    const totalDiscount = discount?.value ?? 0                                         //số tiền giảm giá của thẻ giảm giá
+    let totalSale = 0
+    const total = _products.reduce((sum, { _product, quantity }) => {
+      const price = (_product?.price ?? 0) * (100 - (_product?.percentSale ?? 0)) / 100      //giá bán
+      totalSale += quantity * Math.max((_product?.price ?? 0) - price, 0)                           //số tiền giảm giá theo %
+      return sum + quantity * price;
+    }, 0) - totalDiscount
+
     const newData: IInvoiceSale = {
       _user: idUser,
       _discount: discount?._id ?? null,
@@ -151,7 +201,7 @@ export async function POST(req: Request) {
       }
     ]).exec()
 
-    return Response.json({ status: 'success', message: 'Tạo đơn hàng thành công', data: res, newProductInvoice });
+    return Response.json({ status: 'success', message: 'Tạo đơn hàng thành công', data: res });
   } catch (error) {
     return Response.json({ message: 'get', error: error })
   }

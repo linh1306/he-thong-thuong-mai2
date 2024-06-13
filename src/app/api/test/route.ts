@@ -10,27 +10,29 @@ export async function GET(req: Request) {
   try {
     dbConnect()
 
-    // const res = await ProductWarehouse.aggregate([
-    //   {
-    //     $match: {
-    //       isCancel: false,
-    //     }
-    //   },
-    //   {
-    //     $group: {
-    //       _id: "$_product",
-    //       quantity: { $sum: "$quantity" }
-    //     }
-    //   },
-    //   {
-    //     $merge: {
-    //       into: "Product",
-    //       on: "_id",
-    //       whenMatched: "merge",
-    //       whenNotMatched: "discard"
-    //     }
-    //   }
-    // ]).exec()
+    const res = await ProductWarehouse.aggregate([
+      {
+        $match: {
+          isCancel: false,
+        }
+      },
+      {
+        $group: {
+          _id: "$_product",
+          quantity: { $sum: "$quantity" }
+        }
+      },
+      {
+        $merge: {
+          into: "products",
+          on: "_id",
+          whenMatched: "merge",
+          whenNotMatched: "discard"
+        }
+      }
+    ]).exec()
+
+
     // const orders = [
     //   { _id: "665a88ce4fcea2d333ca097b", quantity: 50 },
     //   { _id: "665a896c4fcea2d333ca0984", quantity: 300 }
@@ -62,21 +64,21 @@ export async function GET(req: Request) {
     // }
 
 
-    const res = await User.aggregate([
-      {
-        $match: {
-          name:{$regex:'lin', $options:'i'}
-        }
-      },
-      {
-        $lookup: {
-          from: 'invoicesales',
-          localField: '_id',
-          foreignField: '_user',
-          as: 'sd'
-        }
-      }
-    ])
+    // const res = await User.aggregate([
+    //   {
+    //     $match: {
+    //       name:{$regex:'lin', $options:'i'}
+    //     }
+    //   },
+    //   {
+    //     $lookup: {
+    //       from: 'invoicesales',
+    //       localField: '_id',
+    //       foreignField: '_user',
+    //       as: 'sd'
+    //     }
+    //   }
+    // ])
 
     return Response.json({ status: 'success', message: 'Đăng nhập thành công', res });
   } catch (error) {

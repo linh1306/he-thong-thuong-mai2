@@ -129,6 +129,27 @@ export async function POST(req: Request) {
 
     const newProductInvoice = PInvoice.map(product => ({ ...product, _invoiceSale: res._id }))
     await ProductInvoice.insertMany(newProductInvoice)
+    await ProductWarehouse.aggregate([
+      {
+        $match: {
+          isCancel: false,
+        }
+      },
+      {
+        $group: {
+          _id: "$_product",
+          quantity: { $sum: "$quantity" }
+        }
+      },
+      {
+        $merge: {
+          into: "products",
+          on: "_id",
+          whenMatched: "merge",
+          whenNotMatched: "discard"
+        }
+      }
+    ]).exec()
 
     return Response.json({ status: 'success', message: 'Tạo đơn hàng thành công', data: res, newProductInvoice });
   } catch (error) {

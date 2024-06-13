@@ -30,6 +30,7 @@ export async function GET(req: Request) {
         .skip((currentPage - 1) * pageSize)
         .limit(pageSize)
         .populate('_user')
+        .sort({ create_at: -1 })
 
       const totalDocuments = await InvoiceSale.countDocuments(options)
       return Response.json({

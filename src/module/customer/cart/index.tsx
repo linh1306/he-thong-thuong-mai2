@@ -7,8 +7,6 @@ import dataAddress from "@/utils/data/dataAddress"
 import { RootState } from "@/utils/redux/store"
 import { IItemCart } from "@/utils/schemas/Cart"
 import { IInvoiceSale } from "@/utils/schemas/InvoiceSale"
-import { IProduct } from "@/utils/schemas/Product"
-import { IUser } from "@/utils/schemas/User"
 import { Avatar, Button, Cascader, Col, Descriptions, Flex, Input, Modal, Row, Table, TableProps } from "antd"
 import Image from "next/image"
 import { useEffect, useState } from "react"
@@ -65,16 +63,22 @@ export default function PageCard() {
   const [address, setAddress] = useState<string[]>([])
   const [detailedAddress, setDetailedAddress] = useState<string>('')
   const [discount, setDiscount] = useState<string>('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [open, setOpen] = useState(false)
 
   const totalPrice = cartStore.reduce((accumulator, item) => accumulator + (item._product.price! * item.quantity), 0);
   const countProducts = cartStore.reduce((accumulator, item) => accumulator + item.quantity, 0);
 
   console.log(userStore, address, detailedAddress);
   const handlePay = async () => {
-    console.log({ codeDiscount: discount, address: [...address, detailedAddress], _products: cartStore });
-    
+    setIsLoading(true)
     const res = await createInvoiceSale({ codeDiscount: discount, address: [...address, detailedAddress], _products: cartStore })
+    if (res.status === 'success') {
+      setInvoiceSale(res.data)
+      setOpen(true)
+    }
     console.log(res);
+    setIsLoading(false)
   }
 
   useEffect(() => {
@@ -126,9 +130,9 @@ export default function PageCard() {
         <Flex>
           <Input value={discount} onChange={(e) => setDiscount(e.target.value)} />
         </Flex>
-        <Button type="primary" className="w-full mt-5" onClick={handlePay}>Thanh toán</Button>
+        <Button loading={isLoading} type="primary" className="w-full mt-5" onClick={handlePay}>Thanh toán</Button>
       </Col>
-      <Modal width={800} title='Hóa đơn' footer={<></>}>
+      <Modal open={open} onCancel={() => setOpen(false)} width={800} title='Hóa đơn' footer={<></>}>
         <Row gutter={12}>
           <Col span={12}>
             <Descriptions items={[
@@ -153,7 +157,7 @@ export default function PageCard() {
             ]} />
           </Col>
           <Col span={12}>
-            <Image src={`https://img.vietqr.io/image/VBA-1500206139509-qr_only.png?amount=10000020&addInfo=nguyenlinh`} alt="qr banking" width={400} height={400} />
+            <Image src={`https://img.vietqr.io/image/VBA-1500206139509-qr_only.png?amount=${invoiceSale.total}&addInfo=${invoiceSale.code}`} alt="qr banking" width={400} height={400} />
           </Col>
         </Row>
       </Modal>

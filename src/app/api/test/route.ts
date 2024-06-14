@@ -10,27 +10,25 @@ export async function GET(req: Request) {
   try {
     dbConnect()
 
-    const res = await ProductWarehouse.aggregate([
-      {
-        $match: {
-          isCancel: false,
-        }
-      },
-      {
-        $group: {
-          _id: "$_product",
-          quantity: { $sum: "$quantity" }
-        }
-      },
-      {
-        $merge: {
-          into: "products",
-          on: "_id",
-          whenMatched: "merge",
-          whenNotMatched: "discard"
-        }
-      }
-    ]).exec()
+    const res = await Product.updateMany({ percentSale: 0 }, { percentSale: 3 })
+
+    // const res = await ProductWarehouse.aggregate([
+
+    //   {
+    //     $group: {
+    //       _id: "$_product",
+    //       quantity: { $sum: "$quantity" }
+    //     }
+    //   },
+    //   {
+    //     $merge: {
+    //       into: "products",
+    //       on: "_id",
+    //       whenMatched: "merge",
+    //       whenNotMatched: "discard"
+    //     }
+    //   }
+    // ]).exec()
 
 
     // const orders = [

@@ -104,11 +104,6 @@ export async function POST(req: Request) {
 
     await ProductWarehouse.aggregate([
       {
-        $match: {
-          isCancel: false,
-        }
-      },
-      {
         $group: {
           _id: "$_product",
           quantity: { $sum: "$quantity" }

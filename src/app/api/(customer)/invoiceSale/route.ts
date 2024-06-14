@@ -180,16 +180,9 @@ export async function POST(req: Request) {
 
     const resCreate = await InvoiceSale.create(newData)
 
-
-
     const newProductInvoice = PInvoice.map(product => ({ ...product, _invoiceSale: resCreate._id }))
     await ProductInvoice.insertMany(newProductInvoice)
     await ProductWarehouse.aggregate([
-      {
-        $match: {
-          isCancel: false,
-        }
-      },
       {
         $group: {
           _id: "$_product",

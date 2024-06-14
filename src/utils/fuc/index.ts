@@ -55,6 +55,6 @@ export function timeToString(time: Date): string {
 
 export function newDate() {
   const date = new Date();
-  date.setMonth(date.getMonth() - 3);
+  // date.setMonth(date.getMonth() - 3);
   return date
 }

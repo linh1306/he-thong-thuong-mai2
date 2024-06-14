@@ -4,11 +4,12 @@ import {
   MenuUnfoldOutlined,
   LogoutOutlined,
   ShoppingCartOutlined,
-  BellOutlined
+  BellOutlined,
+  CloseOutlined
 } from '@ant-design/icons';
 import { Header } from "antd/es/layout/layout"
 import React, { useEffect, useState } from 'react';
-import { Avatar, Badge, Button, Divider, Dropdown, Flex, Space, theme } from 'antd';
+import { Avatar, Badge, Button, Divider, Dropdown, Flex, List, Space, theme } from 'antd';
 import Image from 'next/image';
 import Link from 'next/link';
 import Search from 'antd/es/input/Search';
@@ -19,6 +20,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/utils/redux/store';
 import { getMe } from '@/utils/api/customer/getMe';
 import { deleteToken } from '@/utils/api/Auth';
+import { getNotificationsMe, updateStatusNotification } from '@/utils/api/customer/notification';
+import { INotification } from '@/utils/schemas/Notification';
 
 interface IHeaderProp {
   collapsed: boolean;
@@ -31,12 +34,58 @@ interface ICpnUserProp {
 }
 
 function CpnNotification() {
+  const [notification, setNotification] = useState<INotification[]>([])
+  const [reload, setReload] = useState(false)
+  useEffect(() => {
+    const fetchData = async () => {
+      const res = await getNotificationsMe()
+      if (res.status === 'success') {
+        setNotification(res.data)
+      }
+    };
+    fetchData();
+  }, [reload])
   return (
-    <Link href={'/gio-hang'}>
-      <Badge size='small' count={1}>
+    <Dropdown
+      trigger={['click']}
+      dropdownRender={() => (
+        <div className='bg-white p-4 config-shadow overflow-hidden rounded-lg min-w-80'>
+          <List
+            itemLayout="horizontal"
+            dataSource={notification}
+            renderItem={(item, index) => (
+              <List.Item actions={[
+                <Button
+                key={'btn'}
+                  type="text"
+                  size='small'
+                  icon={<CloseOutlined />}
+                  onClick={async () => {
+                    await updateStatusNotification({ _id: item._id ?? '', status: true })
+                    setReload(prop => !prop)
+                  }}
+                  style={{ position: 'absolute', top: 0, right: 0 }}
+                />
+              ]}>
+                <List.Item.Meta
+                  avatar={<Avatar className='cursor-pointer' size='large' icon={<Image src={'/image/user.png'} alt='avatar' width={70} height={70} />} />}
+                  title={'Admin'}
+                  description={
+                    <div className=''>
+                      <p>{item.description}<strong className='text-black'> {item.code ?? ''}</strong></p>
+                    </div>
+                  }
+                />
+              </List.Item>
+            )}
+          />
+        </div>
+      )}
+    >
+      <Badge size='small' count={notification.length}>
         <Avatar size='small' icon={<BellOutlined />} />
       </Badge>
-    </Link>
+    </Dropdown>
   )
 }
 
@@ -69,6 +118,10 @@ function CpnUser({ user, handleLogout }: ICpnUserProp) {
             <Flex vertical>
               <p className='text-base'>{user?.name}</p>
               <p className='text-xs text-slate-400'>{user?.email}</p>
+            </Flex>
+            <Flex vertical gap='small' align='start'>
+              <Divider style={{ margin: 0 }} />
+              <Link href={'/don-hang'}>Đơn hàng</Link>
             </Flex>
             <Flex vertical gap='small'>
               <Divider style={{ margin: 0 }} />

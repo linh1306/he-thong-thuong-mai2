@@ -117,6 +117,9 @@ export async function POST(req: Request) {
     if (!yup.valid) {
       return Response.json({ status: 'warning', message: 'Các trường dữ liệu không đúng yêu cầu', error: yup.invalidFields });
     }
+    if (_products.length === 0) {
+      return Response.json({ status: 'warning', message: 'Đơn hàng không có sản phẩm', data: [] });
+    }
     const discount = await Discount.findOne({ code: codeDiscount })
     let code = createId();
 
@@ -175,9 +178,11 @@ export async function POST(req: Request) {
       create_at: newDate()
     }
 
-    const res = await InvoiceSale.create(newData)
+    const resCreate = await InvoiceSale.create(newData)
 
-    const newProductInvoice = PInvoice.map(product => ({ ...product, _invoiceSale: res._id }))
+
+
+    const newProductInvoice = PInvoice.map(product => ({ ...product, _invoiceSale: resCreate._id }))
     await ProductInvoice.insertMany(newProductInvoice)
     await ProductWarehouse.aggregate([
       {
@@ -200,9 +205,62 @@ export async function POST(req: Request) {
         }
       }
     ]).exec()
-
-    return Response.json({ status: 'success', message: 'Tạo đơn hàng thành công', data: res });
+    const res = await InvoiceSale.aggregate([
+      {
+        $match: {
+          _id: resCreate._id
+        }
+      },
+      {
+        $lookup: {
+          from: 'productinvoices',
+          let: { invoiceSaleId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ['$_invoiceSale', '$$invoiceSaleId'] }
+              }
+            },
+            {
+              $lookup: {
+                from: 'products',
+                localField: '_product',
+                foreignField: '_id',
+                as: 'productDetails'
+              }
+            },
+            {
+              $project: {
+                _id: 1,
+                quantity: 1,
+                price: 1,
+                'productDetails.name': 1,
+                'productDetails.urlImage': 1,
+              }
+            },
+            {
+              $unwind: {
+                path: '$productDetails',
+                preserveNullAndEmptyArrays: true
+              }
+            },
+            {
+              $project: {
+                _id: 1,
+                quantity: 1,
+                price: 1,
+                'productDetails.name': 1,
+                'productDetails.urlImage': 1,
+              }
+            }
+          ],
+          as: 'products'
+        }
+      }
+    ]).limit(1);
+    return Response.json({ status: 'success', message: 'Tạo đơn hàng thành công', data: res[0] });
   } catch (error) {
     return Response.json({ message: 'get', error: error })
   }
 }
+

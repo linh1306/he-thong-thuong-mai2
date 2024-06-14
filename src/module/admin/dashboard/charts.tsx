@@ -6,40 +6,101 @@ import { ICategory } from "@/utils/schemas/Category";
 import { Badge, Button, Card, Col, Flex, Input, Progress, Row, Select, Space, Statistic, Table, TableProps } from "antd";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Label } from 'recharts';
+import { IGetReportChartBody, getReportChart } from "@/utils/api/admin/report";
+import { getProducts } from "@/utils/api/customer/product";
+import { IProduct } from "@/utils/schemas/Product";
 
-export default function Charts() {
-  const [category, setCategory] = useState<ICategory[]>([]);
-  const [openModal, setOpenModal] = useState(false);
-  const [titleModal, setTitleModal] = useState('Add');
-  const [initValue, setInitValue] = useState<ICategory>({});
-  const [loading, setLoading] = useState(true)
+interface Option {
+  value: string;
+  label: string;
+}
+const colors = [
+  "#3e95cd",
+  "#ff6f61",
+  "#6b5b95",
+  "#88b04b",
+  "#d65076",
+  "#45b8ac",
+  "#e94b3c",
+  "#009b77",
+  "#dd4124",
+  "#9b2335",
+  "#f7cac9",
+  "#92a8d1",
+  "#955251",
+  "#b565a7",
+  "#009b77",
+  "#dd4124",
+  "#9b2335",
+  "#f7cac9",
+  "#92a8d1",
+  "#955251",
+  "#b565a7",
+  "#009b77",
+  "#dd4124",
+  "#9b2335",
+  "#f7cac9"
+];
+
+
+export default function Charts({ oderPayed, oderDelivered, oderTotal }: { oderPayed: number, oderDelivered: number, oderTotal: number }) {
+  const [report, setReport] = useState([]);
+  const [option, setOption] = useState<IGetReportChartBody>({
+    _product: [],
+    optionReport: 'month'
+  });
+  const [optionProducts, setOptionProducts] = useState<Option[]>([])
   const [reload, setReload] = useState(false)
 
-  const data = [
-    { name: 'Sunday', Applied: 86, Accepted: 70, Pending: 10 },
-    { name: 'Monday', Applied: 114, Accepted: 90, Pending: 21 },
-    { name: 'Tuesday', Applied: 106, Accepted: 44, Pending: 60 },
-    { name: 'Wednesday', Applied: 106, Accepted: 60, Pending: 44 },
-    { name: 'Thursday', Applied: 107, Accepted: 83, Pending: 17 },
-    { name: 'Friday', Applied: 111, Accepted: 90, Pending: 21 },
-    { name: 'Saturday', Applied: 133, Accepted: 100, Pending: 17 }
-  ];
+  useEffect(() => {
+    const fetchData = async () => {
+      const res = await getReportChart(option)
+      console.log('chart', res,option);
+      if (res.status === 'success') {
+        setReport(res.data)
+      }
+    }
+    fetchData()
+  }, [reload])
+  useEffect(() => {
+    const fetchData = async () => {
+      const res = await getProducts({
+        currentPage: 1,
+        pageSize: 9999
+      })
+      if (res.status === 'success') {
+        const { data }: { data: IProduct[] } = res
+        const optionSelectProduct = data.map(product => ({ label: product.name!, value: product.name! }))
+        setOptionProducts(optionSelectProduct)
+      }
+    }
+    fetchData()
+  }, [])
 
   return (
     <Row gutter={12}>
       <Col className="rounded-md border-2" span={18}>
         <ResponsiveContainer width="100%" height={400}>
-          <LineChart data={data}>
+          <LineChart data={report}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="name" />
             <YAxis />
             <Tooltip />
             <Legend />
-            <Line type="monotone" dataKey="Applied" stroke="#3e95cd" />
-            <Line type="monotone" dataKey="Accepted" stroke="#3cba9f" />
-            <Line type="monotone" dataKey="Pending" stroke="#ffa500" />
-            <Line type="monotone" dataKey="Rejected" stroke="#c45850" />
+            {
+              option._product.map((item, index) => {
+                return (
+                  <Line
+                    key={index}
+                    type="monotone"
+                    dataKey={item}
+                    stroke={colors[index]}
+                    activeDot={{ r: 8 }}
+                  />
+                )
+              })
+            }
           </LineChart>
         </ResponsiveContainer>
       </Col>
@@ -48,13 +109,12 @@ export default function Charts() {
           <Select
             mode="multiple"
             placeholder="Please select"
-            defaultValue={['all']}
+            defaultValue={[]}
             style={{ width: '100%' }}
-            options={[
-              { value: 'all', label: 'Tất cả' },
-              { value: 'new', label: 'Mới' },
-              { value: 'old', label: 'Cũ' }
-            ]}
+            options={optionProducts}
+            onChange={(value) => {
+              setOption(prop => ({ ...prop, _product: value }))
+            }}
             filterOption={(input, option) => {
               const label = option?.label
               if (label) {
@@ -72,16 +132,19 @@ export default function Charts() {
                 { value: 'precious', label: 'Quý' },
                 { value: 'year', label: 'Năm' }
               ]}
+              onChange={(value) => {
+                setOption(prop => ({ ...prop, optionReport: value }))
+              }}
             />
-            <Button className="flex-1" type="primary" icon={<p>Ok</p>} />
+            <Button onClick={() => setReload(prop => !prop)} className="flex-1" type="primary" icon={<p>Ok</p>} />
           </Flex>
         </Flex>
         <Flex className="w-full h-full" justify="center" align="center">
-          <Progress size={[200, 20]} type="dashboard" showInfo={false} success={{ percent: 10 }} percent={12} />
+          <Progress size={[200, 20]} type="dashboard" showInfo={false} success={{ percent: oderDelivered / oderTotal * 100 }} percent={(oderDelivered + oderPayed) / oderTotal * 100} />
           <Flex vertical className="absolute">
-            <Badge size="small" status="processing" text={"Đã thanh toán:" + 21} />
-            <Badge status="success" text={"Đã giao hàng:" + 43} />
-            <Badge status="default" text={"Tổng đơn:" + 1000} />
+            <Badge size="small" status="processing" text={"Đã thanh toán:" + oderPayed} />
+            <Badge status="success" text={"Đã giao hàng:" + oderDelivered} />
+            <Badge status="default" text={"Tổng đơn:" + oderTotal} />
           </Flex>
         </Flex>
       </Col>

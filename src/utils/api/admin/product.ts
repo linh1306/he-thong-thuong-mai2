@@ -13,9 +13,14 @@ export interface ICreateProductParams {
   unit: string
 }
 export interface IUpdateProductParams {
-  _id: string,
-  name: string,
-  urlImage: string
+  _id?: string,
+  name?: string,
+  _category?: string,
+  price?: number,
+  description?: string,
+  urlImage?: string,
+  percentSale?: number,
+  unit?: string
 }
 export interface IDeleteProductParams {
   _id: string

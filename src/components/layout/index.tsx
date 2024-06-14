@@ -10,6 +10,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import CHeader from './header';
 import { getCategory } from '@/utils/api/customer/category';
 import { ICategory } from '@/utils/schemas/Category';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/utils/redux/store';
 
 type MenuItem = Required<MenuProps>['items'][number];
 
@@ -18,6 +20,7 @@ const { Sider } = Layout;
 export default function CLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
+  const userStore = useSelector((state: RootState) => state.user)
   const [collapsed, setCollapsed] = useState(false);
   const {
     token: { colorBgContainer, borderRadiusLG },
@@ -41,62 +44,6 @@ export default function CLayout({ children }: { children: React.ReactNode }) {
       key: '/lien-he',
       icon: <ContactsOutlined />,
       label: 'Liên hệ'
-    },
-    {
-      key: '/admin',
-      icon: <ContactsOutlined />,
-      label: 'Admin',
-      children: [
-        {
-          key: '/admin/dashboard',
-          label: 'Dashboard'
-        },
-        {
-          key: '/quan-ly',
-          label: 'Quản lý',
-          children: [
-            {
-              key: '/admin/quan-ly-loai-mat-hang',
-              label: 'Loại mặt hàng'
-            },
-            {
-              key: '/admin/quan-ly-mat-hang',
-              label: 'Mặt hàng'
-            },
-            {
-              key: '/admin/quan-ly-nguoi-dung',
-              label: 'Người dùng'
-            },
-            {
-              key: '/admin/quan-ly-lien-he',
-              label: 'Liên hệ'
-            },
-            {
-              key: '/admin/quan-ly-nha-cung-cap',
-              label: 'Nhà cung cấp'
-            },
-          ]
-        }
-      ]
-    },
-    {
-      key: '/employee',
-      icon: <ContactsOutlined />,
-      label: 'Nhân viên',
-      children: [
-        {
-          key: '/employee/nhap-hang',
-          label: 'Nhập hàng'
-        },
-        {
-          key: '/employee/xuat-hang',
-          label: 'Xuất hàng'
-        },
-        {
-          key: '/employee/mat-hang-trong-kho',
-          label: 'Mặt hàng trong kho'
-        },
-      ]
     },
   ])
 
@@ -122,6 +69,72 @@ export default function CLayout({ children }: { children: React.ReactNode }) {
     getListCategory()
   }, [])
 
+  const routerMenu = [...routes]
+
+  if (userStore.role === 'admin') {
+    routerMenu.push({
+      key: '/admin',
+      icon: <ContactsOutlined />,
+      label: 'Admin',
+      children: [
+        {
+          key: '/admin/dashboard',
+          label: 'Dashboard'
+        },
+        {
+          key: '/quan-ly',
+          label: 'Quản lý',
+          children: [
+            {
+              key: '/admin/quan-ly-nhanh',
+              label: 'Quản lý nhanh'
+            },
+            {
+              key: '/admin/quan-ly-loai-mat-hang',
+              label: 'Loại mặt hàng'
+            },
+            {
+              key: '/admin/quan-ly-mat-hang',
+              label: 'Mặt hàng'
+            },
+            {
+              key: '/admin/quan-ly-nguoi-dung',
+              label: 'Người dùng'
+            },
+            {
+              key: '/admin/quan-ly-lien-he',
+              label: 'Liên hệ'
+            },
+            {
+              key: '/admin/quan-ly-nha-cung-cap',
+              label: 'Nhà cung cấp'
+            },
+          ]
+        }
+      ]
+    })
+  }
+  if (userStore.role === 'employee') {
+    routerMenu.push({
+      key: '/employee',
+      icon: <ContactsOutlined />,
+      label: 'Nhân viên',
+      children: [
+        {
+          key: '/employee/nhap-hang',
+          label: 'Nhập hàng'
+        },
+        {
+          key: '/employee/xuat-hang',
+          label: 'Xuất hàng'
+        },
+        {
+          key: '/employee/mat-hang-trong-kho',
+          label: 'Mặt hàng trong kho'
+        },
+      ]
+    })
+  }
 
 
   return (
@@ -133,7 +146,7 @@ export default function CLayout({ children }: { children: React.ReactNode }) {
           mode="inline"
           selectedKeys={[pathname]}
           onClick={handleClickMenu}
-          items={routes}
+          items={routerMenu}
         />
       </Sider>
       <Layout className='h-screen'>

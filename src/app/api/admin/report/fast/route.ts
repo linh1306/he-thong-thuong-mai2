@@ -33,76 +33,7 @@ export async function GET(req: Request) {
     const res: IReport = {
       reportProducts: [],
       reportUsers: [],
-      revenues: 0,
-      oderCancelled: 0,
-      oderPayed: 0,
-      oderDelivered: 0,
-      oderTotal: 0,
-      total: 0,
-      discount: 0,
     }
-
-    const invoiceSaleOfMonth = await InvoiceSale.aggregate([
-      {
-        $match: {
-          create_at: {
-            $gte: options.start,
-            $lt: options.end
-          }
-        }
-      },
-      {
-        $group: {
-          _id: null,
-          revenue: { $sum: '$revenue' },
-          total: { $sum: '$total' },
-          totalDiscount: { $sum: '$totalDiscount' },
-        }
-      },
-      {
-        $limit: 1
-      }
-    ])
-    if (invoiceSaleOfMonth.length == 0) {
-      return Response.json({
-        status: 'success',
-        message: 'Lấy danh sách đơn hàng nhập mới nhất',
-        data: res,
-        options
-      });
-    }
-
-    const revenue = invoiceSaleOfMonth[0]
-
-    res.revenues = revenue.revenue
-    res.total = revenue.total
-    res.discount = revenue.totalDiscount
-
-    const statusInvoices = await InvoiceSale.aggregate([
-      {
-        $match: {
-          create_at: {
-            $gte: options.start,
-            $lt: options.end
-          }
-        }
-      },
-      {
-        $group: {
-          _id: "$statusInvoice",
-          count: { $sum: 1 }
-        }
-      }
-    ])
-    const objStatusInvoices = await statusInvoices.reduce((acc, item) => {
-      acc[item._id] = item.count;
-      return acc;
-    }, {});
-
-    res.oderCancelled = objStatusInvoices.cancelled ?? 0
-    res.oderDelivered = objStatusInvoices.success ?? 0
-    res.oderPayed = objStatusInvoices.payed ?? 0
-    res.oderTotal = (objStatusInvoices.confirmed ?? 0) + (objStatusInvoices.payed ?? 0) + (objStatusInvoices.success ?? 0) + (objStatusInvoices.cancelled ?? 0)
 
     const reportProduct = await InvoiceSale.aggregate([
       {
@@ -162,8 +93,17 @@ export async function GET(req: Request) {
           _product: "$_id",
           quantity: "$quantity"
         }
-      }
-    ])
+      },
+      {
+        $lookup:{
+          from: 'products',
+          localField: '_product',
+          foreignField: '_id',
+          as: 'product'
+        }
+      },
+      { $sort: { quantity: -1 } }
+    ]).limit(5)
 
     res.reportProducts = reportProduct
 
@@ -189,14 +129,22 @@ export async function GET(req: Request) {
           revenue: "$revenue"
         }
       },
+      {
+        $lookup:{
+          from: 'users',
+          localField: '_user',
+          foreignField: '_id',
+          as: 'user'
+        }
+      },
       { $sort: { revenue: -1 } }
-    ])
+    ]).limit(5)
 
     res.reportUsers = reportUser
 
     return Response.json({
       status: 'success',
-      message: 'Lấy danh sách đơn hàng nhập mới nhất',
+      message: 'Báo cáo mới nhất thành công',
       data: res,
       options
     });

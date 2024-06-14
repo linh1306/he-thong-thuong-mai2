@@ -43,11 +43,6 @@ export async function PUT(req: Request) {
   try {
     dbConnect()
     const { _id, name, _category, price, description, urlImage, percentSale, unit } = await req.json();
-    const yup = await yupValidate({ name, price, description, urlImage, percentSale, unit })
-
-    if (!yup.valid) {
-      return Response.json({ status: 'warning', message: 'Các trường dữ liệu không đúng yêu cầu', error: yup.invalidFields });
-    }
 
     const { payloadToken } = verifyToken()
 
@@ -63,11 +58,8 @@ export async function PUT(req: Request) {
           _category,
           price,
           description,
-          quantity: 0,
           urlImage,
           percentSale,
-          numberOfReviews: 0,
-          sumRating: 0,
           unit
         }
       }

@@ -68,7 +68,7 @@ export default function ReportUserAndProducts() {
         <Table bordered columns={columnsUser} dataSource={dataUser} pagination={false} />
       </Col>
       <Col span={18}>
-        <Table bordered columns={columnsUser} dataSource={dataUser} pagination={false}/>
+        <Table bordered columns={columnsUser} dataSource={dataUser} pagination={false} />
       </Col>
     </Row>
   )

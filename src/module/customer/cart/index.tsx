@@ -4,9 +4,12 @@ import AddToCart from "@/components/cart/addToCart"
 import CCascaderAddress from "@/components/cascaderAddress"
 import { createInvoiceSale } from "@/utils/api/customer/invoiceSale"
 import dataAddress from "@/utils/data/dataAddress"
+import createNotification from "@/utils/fuc/notification"
 import { RootState } from "@/utils/redux/store"
 import { IItemCart } from "@/utils/schemas/Cart"
 import { IInvoiceSale } from "@/utils/schemas/InvoiceSale"
+import { IProduct } from "@/utils/schemas/Product"
+import { IProductInvoice } from "@/utils/schemas/ProductInvoice"
 import { Avatar, Button, Cascader, Col, Descriptions, Flex, Input, Modal, Row, Table, TableProps } from "antd"
 import Image from "next/image"
 import { useEffect, useState } from "react"
@@ -54,12 +57,19 @@ interface Option {
 }
 
 const options: Option[] = dataAddress
+interface IProductInvoiceRes extends IProductInvoice {
+  productDetails?: IProduct
+}
+
+interface IInvoiceSaleRes extends IInvoiceSale {
+  products?: IProductInvoiceRes[]
+}
 
 export default function PageCard() {
   const cartStore = useSelector((state: RootState) => state.cart)
   const userStore = useSelector((state: RootState) => state.user)
 
-  const [invoiceSale, setInvoiceSale] = useState<IInvoiceSale>({})
+  const [invoiceSale, setInvoiceSale] = useState<IInvoiceSaleRes>({})
   const [address, setAddress] = useState<string[]>([])
   const [detailedAddress, setDetailedAddress] = useState<string>('')
   const [discount, setDiscount] = useState<string>('')
@@ -69,7 +79,6 @@ export default function PageCard() {
   const totalPrice = cartStore.reduce((accumulator, item) => accumulator + (item._product.price! * item.quantity), 0);
   const countProducts = cartStore.reduce((accumulator, item) => accumulator + item.quantity, 0);
 
-  console.log(userStore, address, detailedAddress);
   const handlePay = async () => {
     setIsLoading(true)
     const res = await createInvoiceSale({ codeDiscount: discount, address: [...address, detailedAddress], _products: cartStore })
@@ -77,6 +86,7 @@ export default function PageCard() {
       setInvoiceSale(res.data)
       setOpen(true)
     }
+    createNotification(res.status, res.message)
     console.log(res);
     setIsLoading(false)
   }
@@ -88,6 +98,39 @@ export default function PageCard() {
       setDetailedAddress((userStore?.address ?? [])[3] ?? '')
     }
   }, [userStore])
+
+  const columnsProduct: TableProps<IProductInvoiceRes>['columns'] = [
+    {
+      key: 'stt',
+      title: <p>Số thứ tự</p>,
+      render: (_, __, index) => <p>{index}</p>,
+    },
+    {
+      key: '_product.urlImage',
+      title: 'Hình ảnh',
+      render: (_, { productDetails }) => (
+        <div className="w-12 aspect-square overflow-hidden object-cover">
+          <Image src={productDetails?.urlImage!} alt="banner Product" width={200} height={200} />
+        </div>
+      ),
+    },
+    {
+      key: '_product.name',
+      title: 'Tên',
+      render: (_, { productDetails }) => <p>{productDetails?.name}</p>,
+    },
+    {
+      key: 'price',
+      title: 'Giá',
+      align: 'end',
+      render: (_, invoiceSale) => <p>{invoiceSale?.price?.toLocaleString('vi-VN')}đ</p>,
+    },
+    {
+      key: 'quantity',
+      title: 'Số lượng',
+      dataIndex: 'quantity'
+    }
+  ];
 
   return (
     <Row gutter={12}>
@@ -132,32 +175,37 @@ export default function PageCard() {
         </Flex>
         <Button loading={isLoading} type="primary" className="w-full mt-5" onClick={handlePay}>Thanh toán</Button>
       </Col>
-      <Modal open={open} onCancel={() => setOpen(false)} width={800} title='Hóa đơn' footer={<></>}>
+      <Modal open={open} onCancel={() => setOpen(false)} width={900} title='Hóa đơn' footer={<></>}>
         <Row gutter={12}>
           <Col span={12}>
             <Descriptions items={[
               {
                 key: '1',
                 span: 3,
-                label: 'Số mặt hàng',
-                children: cartStore.length,
+                label: 'Mã thanh toán',
+                children: invoiceSale.code,
               },
               {
                 key: '2',
                 span: 3,
-                label: 'Số sản phẩm',
-                children: countProducts,
+                label: 'Địa chỉ giao hàng',
+                children: <p>{invoiceSale.address?.join(', ')}</p>,
               },
               {
                 key: '3',
                 span: 3,
                 label: <p className="font-bold">Tổng tiền</p>,
-                children: <p className="font-bold text-green-500">{totalPrice.toLocaleString('vi-VN')} đ</p>
-              }
+                children: <p className="font-bold text-green-500">{(invoiceSale.total ?? 0).toLocaleString('vi-VN')} đ</p>
+              },
+              {
+                key: '4',
+                span: 3,
+                children: <Table className="w-full" columns={columnsProduct} dataSource={invoiceSale?.products} pagination={false} />
+              },
             ]} />
           </Col>
           <Col span={12}>
-            <Image src={`https://img.vietqr.io/image/VBA-1500206139509-qr_only.png?amount=${invoiceSale.total}&addInfo=${invoiceSale.code}`} alt="qr banking" width={400} height={400} />
+            <Image src={`https://img.vietqr.io/image/VBA-1500206139509-qr_only.png?amount=${invoiceSale?.total}&addInfo=${invoiceSale?.code}`} alt="qr banking" width={400} height={400} />
           </Col>
         </Row>
       </Modal>
